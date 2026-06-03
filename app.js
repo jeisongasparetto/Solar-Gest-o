@@ -91,29 +91,30 @@ function dadosCasa(i){
   };
 }
 
+// ALTERAÇÃO 1 + 2: novo template WhatsApp com emojis e "Valor a pagar no aluguel"
 function gerarMensagemCasa(i){
   calcular();
   const mes = valor("mes") || "mês não informado";
   const d = dadosCasa(i);
   const nome = d.inquilino ? d.inquilino : d.casa;
 
-  return `RESUMO ENERGIA SOLAR - ${mes}
+  return `☀️ ENERGIA SOLAR – ${mes}
 
-${nome.toUpperCase()}
+Imóvel: ${nome.toUpperCase()}
 Unidade consumidora: ${d.uc}
-Consumo da fatura: ${moeda(d.consumo)}
-Valor compensado/injetado: ${moeda(d.injetado)}
-Economia com desconto solar: ${moeda(d.economia)}
-Valor total a pagar: ${moeda(d.pagar)}
 
-Obrigado.`;
+Consumo da fatura: ${moeda(d.consumo)}
+Compensado pelo solar: ${moeda(d.injetado)}
+Desconto repassado: ${moeda(d.economia)}
+
+✅ Valor a pagar no aluguel: ${moeda(d.pagar)}`;
 }
 
 function gerarMensagemGeral(){
   calcular();
   const mes = valor("mes") || "mês não informado";
   const desc = valor("desconto") || "10";
-  let msg = `RESUMO ENERGIA SOLAR - ${mes}
+  let msg = `☀️ RESUMO ENERGIA SOLAR – ${mes}
 Desconto aplicado: ${desc}%
 
 `;
@@ -121,12 +122,12 @@ Desconto aplicado: ${desc}%
   for(let i = 1; i <= QTD_CASAS; i++){
     const d = dadosCasa(i);
     const nome = d.inquilino ? d.inquilino : d.casa;
-    msg += `${nome.toUpperCase()}
+    msg += `Imóvel: ${nome.toUpperCase()}
 UC: ${d.uc}
 Consumo da fatura: ${moeda(d.consumo)}
-Valor compensado/injetado: ${moeda(d.injetado)}
-Economia: ${moeda(d.economia)}
-Valor total a pagar: ${moeda(d.pagar)}
+Compensado pelo solar: ${moeda(d.injetado)}
+Desconto repassado: ${moeda(d.economia)}
+✅ Valor a pagar no aluguel: ${moeda(d.pagar)}
 
 `;
   }
@@ -223,20 +224,41 @@ function limparDados(){
   location.reload();
 }
 
+// ALTERAÇÃO 3: histórico agora salva também os dados de cada casa
 function salvarHistorico(){
   calcular();
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+
+  const casas = [];
+  for(let i = 1; i <= QTD_CASAS; i++){
+    const d = dadosCasa(i);
+    if(d.consumo > 0 || d.injetado > 0){
+      casas.push({
+        nome: d.inquilino ? d.inquilino : d.casa,
+        pagar: d.pagar
+      });
+    }
+  }
+
   historico.unshift({
+    id: Date.now(),
     data: new Date().toLocaleString("pt-BR"),
     mes: valor("mes") || "sem mês",
+    desconto: valor("desconto") || "10",
+    investimento: valor("investimento") || "",
     receber: document.getElementById("kpiReceber").textContent,
-    economia: document.getElementById("kpiEconomia").textContent
+    receberNum: parseFloat(document.getElementById("kpiReceber").textContent.replace(/[^0-9,]/g,"").replace(",",".")),
+    economia: document.getElementById("kpiEconomia").textContent,
+    casas,
+    dadosCompletos: coletarDados()
   });
+
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));
   renderHistorico();
   alert("Histórico salvo.");
 }
 
+// ALTERAÇÃO 4 + 5: renderHistorico com dados das casas, botão editar e total acumulado
 function renderHistorico(){
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
   const area = document.getElementById("historico");
@@ -246,13 +268,51 @@ function renderHistorico(){
     return;
   }
 
-  area.innerHTML = historico.map(item => `
-    <div class="history-item">
-      <strong>${item.mes}</strong>
-      <div>Total a receber: ${item.receber} | Economia: ${item.economia}</div>
-      <span>${item.data}</span>
+  // Total acumulado
+  const totalAcumulado = historico.reduce((acc, item) => {
+    const v = parseFloat(String(item.receber || "0").replace(/[^0-9,]/g,"").replace(",",".")) || item.receberNum || 0;
+    return acc + v;
+  }, 0);
+
+  let html = `
+    <div class="historico-total">
+      <strong>Total acumulado a receber (todos os meses):</strong>
+      <span class="historico-total-valor">${moeda(totalAcumulado)}</span>
     </div>
-  `).join("");
+  `;
+
+  html += historico.map((item, idx) => {
+    const casasHtml = (item.casas && item.casas.length)
+      ? item.casas.map(c => `<div class="historico-casa">🏠 ${c.nome}: <strong>${moeda(c.pagar)}</strong></div>`).join("")
+      : "";
+
+    return `
+      <div class="history-item">
+        <div class="history-item-header">
+          <strong>${item.mes}</strong>
+          <button class="btn-editar-historico" onclick="editarHistorico(${idx})">✏️ Editar</button>
+        </div>
+        <div>Total a receber: ${item.receber} | Economia: ${item.economia}</div>
+        ${casasHtml}
+        <span>${item.data}</span>
+      </div>
+    `;
+  }).join("");
+
+  area.innerHTML = html;
+}
+
+// ALTERAÇÃO 4: função para editar um registro do histórico
+function editarHistorico(idx){
+  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+  const item = historico[idx];
+  if(!item || !item.dadosCompletos) return alert("Dados completos não disponíveis neste registro.");
+
+  if(!confirm(`Deseja carregar os dados de "${item.mes}" para edição? Os campos atuais serão substituídos.`)) return;
+
+  aplicarDados(item.dadosCompletos);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  alert(`Dados de "${item.mes}" carregados. Faça as alterações e salve novamente no histórico.`);
 }
 
 function baixarBackup(){
@@ -324,6 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+
 function apagarHistorico() {
   if (confirm("Tem certeza que deseja apagar todo o histórico?")) {
     localStorage.removeItem("solarGestaoHistorico");
@@ -331,3 +392,4 @@ function apagarHistorico() {
     alert("Histórico apagado com sucesso.");
   }
 }
+

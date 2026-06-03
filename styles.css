@@ -144,18 +144,68 @@ textarea {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
   
-.actions {
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  
+  .panel {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+}
+
+/* ── NOVOS ESTILOS: histórico ── */
+
+.historico-total {
+  background: linear-gradient(135deg, #071527, #12385C);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  margin-top: 10px;
+  gap: 6px;
 }
-  
-.panel {
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  margin-top: 15px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+
+.historico-total-valor {
+  font-size: 18px;
+  font-weight: bold;
+  color: #22c55e;
 }
-  
+
+.history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.historico-casa {
+  font-size: 12px;
+  color: #444;
+  padding: 2px 0 2px 8px;
+  border-left: 3px solid #1e88e5;
+  margin: 3px 0;
+}
+
+.btn-editar-historico {
+  background: #1e88e5;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-editar-historico:hover {
+  background: #1565c0;
+}

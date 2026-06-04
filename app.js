@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRemoverCasa").addEventListener("click", removerCasa);
 
   // inputs de configuração recalculam automaticamente
-
+  ["mes", "desconto"].forEach(id => {
     document.getElementById(id).addEventListener("input", calcular);
   });
 });

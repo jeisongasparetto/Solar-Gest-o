@@ -14,6 +14,7 @@ function toast(msg, type = "success", duration = 3000) {
 
 // ===== ESTADO =====
 let qtdCasas = 4;
+let historicoEditandoIndex = null;
 
 // ===== UTILITÁRIOS =====
 function moeda(valor) {
@@ -293,48 +294,66 @@ function salvarHistorico() {
   calcular();
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
 
-  // Calcula totalPagar como número diretamente (sem parsing de texto formatado)
   const percentual = numero("desconto") / 100;
   let totalPagarNum = 0;
   const casas = [];
+
   for (let i = 1; i <= qtdCasas; i++) {
     const injetado = numero("injetado" + i);
-    const pagar    = injetado - injetado * percentual;
+    const pagar = injetado - injetado * percentual;
     totalPagarNum += pagar;
+
     const d = dadosCasa(i);
+
     if (d.consumo > 0 || d.injetado > 0) {
-      casas.push({ nome: d.inquilino ? d.inquilino : d.casa, pagar });
+      casas.push({
+        nome: d.inquilino ? d.inquilino : d.casa,
+        pagar
+      });
     }
   }
 
-  historico.unshift({
-    id:           Date.now(),
-    data:         new Date().toLocaleString("pt-BR"),
-    mes:          valor("mes") || "sem mês",
-    desconto:     valor("desconto") || "10",
-
-    receber:      document.getElementById("kpiReceber").textContent,
-    receberNum:   totalPagarNum, // número puro, sem parsing de texto
-    economia:     document.getElementById("kpiEconomia").textContent,
+  const registro = {
+    id: Date.now(),
+    data: new Date().toLocaleString("pt-BR"),
+    mes: valor("mes") || "sem mês",
+    desconto: valor("desconto") || "10",
+    receber: document.getElementById("kpiReceber").textContent,
+    receberNum: totalPagarNum,
+    economia: document.getElementById("kpiEconomia").textContent,
     casas,
     dadosCompletos: coletarDados()
-  });
+  };
+
+  if (historicoEditandoIndex !== null && historico[historicoEditandoIndex]) {
+    const idAntigo = historico[historicoEditandoIndex].id;
+
+    historico[historicoEditandoIndex] = {
+      ...registro,
+      id: idAntigo,
+      data: new Date().toLocaleString("pt-BR") + " — alterado"
+    };
+
+    historicoEditandoIndex = null;
+    toast("✅ Histórico alterado com sucesso.");
+  } else {
+    historico.unshift(registro);
+    toast("📅 Histórico salvo.");
+  }
 
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));
   renderHistorico();
-  toast("📅 Histórico salvo.");
 }
 
 function renderHistorico() {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
-  const area      = document.getElementById("historico");
+  const area = document.getElementById("historico");
 
   if (!historico.length) {
     area.innerHTML = `<p style="font-size:13px;color:var(--text2);">Nenhum histórico salvo ainda.</p>`;
     return;
   }
 
-  // Usa receberNum (número puro) como fonte primária
   const totalAcumulado = historico.reduce((acc, item) => acc + (item.receberNum || 0), 0);
 
   let html = `
@@ -355,7 +374,10 @@ function renderHistorico() {
       <div class="history-item">
         <div class="history-item-header">
           <strong>${item.mes}</strong>
-          <button class="btn secondary small" onclick="editarHistorico(${idx})">✏️ Editar</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn secondary small" onclick="editarHistorico(${idx})">✏️ Editar</button>
+            <button class="btn danger small" onclick="apagarItemHistorico(${idx})">🗑️ Apagar</button>
+          </div>
         </div>
         <div class="history-item-meta">
           A receber: ${item.receber} &nbsp;|&nbsp; Economia: ${item.economia} &nbsp;|&nbsp; ${item.data}
@@ -371,16 +393,50 @@ function renderHistorico() {
 function editarHistorico(idx) {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
   const item = historico[idx];
-  if (!item || !item.dadosCompletos) { toast("Dados completos não disponíveis.", "warn"); return; }
+
+  if (!item || !item.dadosCompletos) {
+    toast("Dados completos não disponíveis.", "warn");
+    return;
+  }
+
   if (!confirm(`Carregar dados de "${item.mes}" para edição?`)) return;
+
+  historicoEditandoIndex = idx;
   aplicarDados(item.dadosCompletos);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  toast(`✏️ Dados de "${item.mes}" carregados.`);
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  toast(`✏️ Editando "${item.mes}". Após alterar, clique em "Salvar no histórico".`);
+}
+
+function apagarItemHistorico(idx) {
+  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+  const item = historico[idx];
+
+  if (!item) return;
+
+  if (!confirm(`Deseja apagar somente o histórico de "${item.mes}"?`)) return;
+
+  historico.splice(idx, 1);
+  localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico));
+
+  if (historicoEditandoIndex === idx) {
+    historicoEditandoIndex = null;
+  }
+
+  renderHistorico();
+  toast("🗑️ Histórico apagado.", "warn");
 }
 
 function apagarHistorico() {
   if (!confirm("Tem certeza que deseja apagar todo o histórico?")) return;
+
   localStorage.removeItem("solarGestaoHistorico");
+  historicoEditandoIndex = null;
+
   renderHistorico();
   toast("Histórico apagado.", "warn");
 }

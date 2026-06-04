@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
   <header class="topbar">
     <div class="brand">
       <div class="logo">
@@ -32,54 +36,27 @@
   </header>
 
   <main class="container">
+
+    <!-- CONFIGURAÇÃO -->
     <section class="panel">
       <div class="section-title">
         <h2>Configuração</h2>
-
-        <span>Preencha o mês, desconto e investimento do sistema</span>
+        <span>Preencha o mês e o desconto aplicado</span>
       </div>
-
       <div class="config-grid">
         <label>
           Mês de referência
           <input id="mes" type="text" placeholder="Ex: Abril/2026" />
         </label>
-
         <label>
           Desconto ao inquilino (%)
           <input id="desconto" type="text" value="10" />
         </label>
 
-        <label>
-          Investimento do sistema (R$)
-          <input id="investimento" type="text" value="15000" />
-        </label>
       </div>
     </section>
 
-    <section class="kpi-grid">
-      <div class="kpi">
-        <span>Total das faturas</span>
-        <strong id="kpiConsumo">R$ 0,00</strong>
-      </div>
-      <div class="kpi">
-        <span>Total compensado</span>
-        <strong id="kpiInjetado">R$ 0,00</strong>
-      </div>
-      <div class="kpi primary">
-        <span>Total a receber</span>
-        <strong id="kpiReceber">R$ 0,00</strong>
-      </div>
-      <div class="kpi">
-        <span>Economia total</span>
-        <strong id="kpiEconomia">R$ 0,00</strong>
-      </div>
-      <div class="kpi">
-        <span>Payback estimado</span>
-        <strong id="kpiPayback">-</strong>
-      </div>
-    </section>
-
+    <!-- LANÇAMENTOS -->
     <section class="panel">
       <div class="section-title">
         <h2>Lançamentos das casas</h2>
@@ -101,51 +78,8 @@
               <th>WhatsApp</th>
             </tr>
           </thead>
-          <tbody>
-            <tr data-row="1">
-              <td><input id="casa1" value="Casa 1"></td>
-              <td><input id="uc1" placeholder="UC"></td>
-              <td><input id="inq1" placeholder="Nome"></td>
-              <td><input id="consumo1" class="money-input" placeholder="0,00"></td>
-              <td><input id="injetado1" class="money-input" placeholder="0,00"></td>
-              <td class="result" id="desconto1">R$ 0,00</td>
-              <td class="result economy" id="economia1">R$ 0,00</td>
-              <td class="result total" id="pagar1">R$ 0,00</td>
-              <td><button class="btn small" data-msg="1">Copiar</button></td>
-            </tr>
-            <tr data-row="2">
-              <td><input id="casa2" value="Casa 2"></td>
-              <td><input id="uc2" placeholder="UC"></td>
-              <td><input id="inq2" placeholder="Nome"></td>
-              <td><input id="consumo2" class="money-input" placeholder="0,00"></td>
-              <td><input id="injetado2" class="money-input" placeholder="0,00"></td>
-              <td class="result" id="desconto2">R$ 0,00</td>
-              <td class="result economy" id="economia2">R$ 0,00</td>
-              <td class="result total" id="pagar2">R$ 0,00</td>
-              <td><button class="btn small" data-msg="2">Copiar</button></td>
-            </tr>
-            <tr data-row="3">
-              <td><input id="casa3" value="Casa 3"></td>
-              <td><input id="uc3" placeholder="UC"></td>
-              <td><input id="inq3" placeholder="Nome"></td>
-              <td><input id="consumo3" class="money-input" placeholder="0,00"></td>
-              <td><input id="injetado3" class="money-input" placeholder="0,00"></td>
-              <td class="result" id="desconto3">R$ 0,00</td>
-              <td class="result economy" id="economia3">R$ 0,00</td>
-              <td class="result total" id="pagar3">R$ 0,00</td>
-              <td><button class="btn small" data-msg="3">Copiar</button></td>
-            </tr>
-            <tr data-row="4">
-              <td><input id="casa4" value="Casa 4"></td>
-              <td><input id="uc4" placeholder="UC"></td>
-              <td><input id="inq4" placeholder="Nome"></td>
-              <td><input id="consumo4" class="money-input" placeholder="0,00"></td>
-              <td><input id="injetado4" class="money-input" placeholder="0,00"></td>
-              <td class="result" id="desconto4">R$ 0,00</td>
-              <td class="result economy" id="economia4">R$ 0,00</td>
-              <td class="result total" id="pagar4">R$ 0,00</td>
-              <td><button class="btn small" data-msg="4">Copiar</button></td>
-            </tr>
+          <tbody id="casasTbody">
+            <!-- linhas geradas por JS -->
           </tbody>
           <tfoot>
             <tr>
@@ -161,7 +95,12 @@
         </table>
       </div>
 
-      
+      <!-- Botões adicionar/remover casas -->
+      <div class="row-controls">
+        <button id="btnRemoverCasa" class="btn secondary small">− Remover casa</button>
+        <button id="btnAdicionarCasa" class="btn small">+ Adicionar casa</button>
+      </div>
+
       <div class="actions">
         <button id="btnCalcular" class="btn">Calcular agora</button>
         <button id="btnTextoGeral" class="btn secondary">Gerar texto geral</button>
@@ -173,6 +112,7 @@
       </div>
     </section>
 
+    <!-- WHATSAPP -->
     <section class="panel">
       <div class="section-title">
         <h2>Texto pronto para WhatsApp</h2>
@@ -185,16 +125,39 @@
       </div>
     </section>
 
+    <!-- KPIs — MOVIDOS PARA DEPOIS DA TABELA E WHATSAPP -->
+    <section class="kpi-grid">
+      <div class="kpi">
+        <span>Total das faturas</span>
+        <strong id="kpiConsumo">R$ 0,00</strong>
+      </div>
+      <div class="kpi">
+        <span>Total compensado</span>
+        <strong id="kpiInjetado">R$ 0,00</strong>
+      </div>
+      <div class="kpi primary">
+        <span>Total a receber</span>
+        <strong id="kpiReceber">R$ 0,00</strong>
+      </div>
+      <div class="kpi">
+        <span>Economia total</span>
+        <strong id="kpiEconomia">R$ 0,00</strong>
+      </div>
+
+    </section>
+
+    <!-- HISTÓRICO -->
     <section class="panel">
       <div class="section-title">
         <h2>Histórico salvo neste aparelho</h2>
         <span>Registro simples para acompanhar os meses.</span>
       </div>
-      <button onclick="apagarHistorico()" style="background:#c0392b;margin-bottom:10px;">
-  Apagar histórico
+      <button class="btn danger small" onclick="apagarHistorico()" style="margin-bottom:14px;">
+        Apagar histórico
       </button>
       <div id="historico" class="history"></div>
     </section>
+
   </main>
 
   <footer>

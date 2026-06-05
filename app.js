@@ -748,12 +748,80 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnAdicionarCasa").addEventListener("click", adicionarCasa);
   document.getElementById("btnRemoverCasa").addEventListener("click", removerCasa);
   document.getElementById("btnRelatorio").addEventListener("click", gerarRelatorioHistorico);
+  document.getElementById("btnExcel").addEventListener("click", exportarExcel);
 
   ["mes", "desconto"].forEach(id => {
     document.getElementById(id).addEventListener("input", calcular);
   });
 });
 
+
+// ===== EXPORTAR EXCEL =====
+function exportarExcel() {
+  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+
+  if (!historico.length) {
+    toast("Nenhum histórico salvo para exportar.", "warn");
+    return;
+  }
+
+  const historicoOrdenado = [...historico].reverse();
+
+  const abaResumo = [["Mês","A receber (R$)","Economia gerada (R$)","Desconto (%)","Salvo em"]];
+  historicoOrdenado.forEach(item => {
+    const receber = item.receberNum || 0;
+    const economia = item.dadosCompletos?.casas?.reduce((s,c) => {
+      const inj = parseFloat(String(c.injetado||"0").replace(",","."))||0;
+      const desc = parseFloat(item.desconto||"10")/100;
+      return s+inj*desc;
+    },0)||0;
+    abaResumo.push([item.mes, parseFloat(receber.toFixed(2)), parseFloat(economia.toFixed(2)), parseFloat(item.desconto||"10"), item.data]);
+  });
+  const totalRec = historicoOrdenado.reduce((s,i)=>s+(i.receberNum||0),0);
+  const totalEco = historicoOrdenado.reduce((s,i)=>s+(i.dadosCompletos?.casas?.reduce((sc,c)=>{
+    const inj=parseFloat(String(c.injetado||"0").replace(",","."))||0;
+    const desc=parseFloat(i.desconto||"10")/100;
+    return sc+inj*desc;
+  },0)||0),0);
+  abaResumo.push([]);
+  abaResumo.push(["TOTAL", parseFloat(totalRec.toFixed(2)), parseFloat(totalEco.toFixed(2)), "", ""]);
+
+  const abaDetalhado = [["Mês","Imóvel / Inquilino","Unidade Consumidora","Fatura (R$)","Compensado (R$)","Desconto (R$)","A pagar (R$)"]];
+  historicoOrdenado.forEach(item => {
+    (item.dadosCompletos?.casas||[]).forEach((c,idx) => {
+      const inj=parseFloat(String(c.injetado||"0").replace(",","."))||0;
+      const cons=parseFloat(String(c.consumo||"0").replace(",","."))||0;
+      if(inj===0 && cons===0) return;
+      const desc=parseFloat(item.desconto||"10")/100;
+      const eco=inj*desc;
+      const pag=inj-eco;
+      const nome=c.inquilino||c.casa||("Casa "+(idx+1));
+      abaDetalhado.push([item.mes, nome, c.uc||"—", parseFloat(cons.toFixed(2)), parseFloat(inj.toFixed(2)), parseFloat(eco.toFixed(2)), parseFloat(pag.toFixed(2))]);
+    });
+  });
+
+  const abaProducao = [["Mês","Inversor","Potência (kWp)","kWh Injetado","Média (kWh/kWp)"]];
+  historicoOrdenado.forEach(item => {
+    (item.producao||[]).forEach(p => {
+      const media = p.potenciaKwp>0 ? parseFloat((p.kwhInjetado/p.potenciaKwp).toFixed(1)) : 0;
+      abaProducao.push([item.mes, p.inversor||"—", parseFloat(p.potenciaKwp)||0, parseFloat(p.kwhInjetado)||0, media]);
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.aoa_to_sheet(abaResumo);
+  const ws2 = XLSX.utils.aoa_to_sheet(abaDetalhado);
+  const ws3 = XLSX.utils.aoa_to_sheet(abaProducao);
+  ws1["!cols"]=[{wch:18},{wch:18},{wch:22},{wch:14},{wch:24}];
+  ws2["!cols"]=[{wch:18},{wch:22},{wch:22},{wch:14},{wch:16},{wch:16},{wch:14}];
+  ws3["!cols"]=[{wch:18},{wch:20},{wch:16},{wch:16},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws1,"Resumo");
+  XLSX.utils.book_append_sheet(wb,ws2,"Detalhado");
+  XLSX.utils.book_append_sheet(wb,ws3,"Produção");
+  const dataHoje=new Date().toLocaleDateString("pt-BR").replace(///g,"-");
+  XLSX.writeFile(wb,"solar_gestao_"+dataHoje+".xlsx");
+  toast("📊 Excel exportado com sucesso!");
+}
 // Service Worker
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});

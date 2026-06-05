@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#0D1B2A" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css?v=4" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -185,10 +186,13 @@
         <span>Registro simples para acompanhar os meses.</span>
       </div>
 
-      <!-- Botão relatório — antes do histórico -->
-      <div style="margin-bottom:16px;">
+      <!-- Botões — antes do histórico -->
+      <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;">
         <button id="btnRelatorio" class="btn small">
           📄 Relatório PDF
+        </button>
+        <button id="btnExcel" class="btn secondary small">
+          📊 Exportar Excel
         </button>
       </div>
 

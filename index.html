@@ -145,16 +145,19 @@
       </div>
       </section>
 
-    <!-- PRODUÇÃO / INJEÇÃO NA REDE -->
+   <!-- PRODUÇÃO / INJEÇÃO NA REDE -->
 <section class="panel" id="producao-injecao">
-  <h2>Produção / Injeção na rede</h2>
-
-  <div class="table-actions">
-    <button onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
-    <button onclick="salvarProducaoInjecao()">Salvar produção</button>
+  <div class="section-title">
+    <h2>Produção / Injeção na rede</h2>
+    <span>Informe quanto cada sistema injetou no mês.</span>
   </div>
 
-  <div class="table-responsive">
+  <div class="table-actions">
+    <button class="btn small" type="button" onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
+    <button class="btn secondary small" type="button" onclick="salvarProducaoInjecao()">Salvar produção</button>
+  </div>
+
+  <div class="table-wrap">
     <table class="solar-table">
       <thead>
         <tr>

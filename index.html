@@ -52,7 +52,6 @@
           Desconto ao inquilino (%)
           <input id="desconto" type="text" value="10" />
         </label>
-
       </div>
     </section>
 
@@ -125,7 +124,7 @@
       </div>
     </section>
 
-    <!-- KPIs — MOVIDOS PARA DEPOIS DA TABELA E WHATSAPP -->
+    <!-- KPIs -->
     <section class="kpi-grid">
       <div class="kpi">
         <span>Total das faturas</span>
@@ -143,51 +142,59 @@
         <span>Economia total</span>
         <strong id="kpiEconomia">R$ 0,00</strong>
       </div>
-      </section>
+    </section>
 
-   <!-- PRODUÇÃO / INJEÇÃO NA REDE -->
-<section class="panel" id="producao-injecao">
-  <div class="section-title">
-    <h2>Produção / Injeção na rede</h2>
-    <span>Informe quanto cada sistema injetou no mês.</span>
-  </div>
+    <!-- PRODUÇÃO / INJEÇÃO NA REDE -->
+    <section class="panel" id="producao-injecao">
+      <div class="section-title">
+        <h2>Produção / Injeção na rede</h2>
+        <span>Informe quanto cada sistema injetou no mês.</span>
+      </div>
 
-  <div class="table-actions">
-    <button class="btn small" type="button" onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
-    <button class="btn secondary small" type="button" onclick="salvarProducaoInjecao()">Salvar produção</button>
-  </div>
+      <div class="table-actions">
+        <button class="btn small" type="button" onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
+        <button class="btn secondary small" type="button" onclick="salvarProducaoInjecao()">Salvar produção</button>
+      </div>
 
-  <div class="table-wrap">
-    <table class="solar-table">
-      <thead>
-        <tr>
-          <th>Mês</th>
-          <th>Inversor</th>
-          <th>Potência kWp</th>
-          <th>kWh Injetado</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="tabela-producao-injecao"></tbody>
-    </table>
-  </div>
+      <div class="table-wrap">
+        <table class="solar-table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Inversor</th>
+              <th>Potência kWp</th>
+              <th>kWh Injetado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-producao-injecao"></tbody>
+        </table>
+      </div>
 
-  <div class="resumo-producao">
-    <p><strong>Total injetado:</strong> <span id="total-kwh-injetado">0</span> kWh</p>
-    <p><strong>Potência total:</strong> <span id="total-potencia-kwp">0</span> kWp</p>
-    <p><strong>Média:</strong> <span id="media-kwh-kwp">0</span> kWh/kWp</p>
-  </div>
-</section>
-    
+      <div class="resumo-producao">
+        <p><strong>Total injetado:</strong> <span id="total-kwh-injetado">0</span> kWh</p>
+        <p><strong>Potência total:</strong> <span id="total-potencia-kwp">0</span> kWp</p>
+        <p><strong>Média:</strong> <span id="media-kwh-kwp">0</span> kWh/kWp</p>
+      </div>
+    </section>
+
     <!-- HISTÓRICO -->
     <section class="panel">
       <div class="section-title">
         <h2>Histórico salvo neste aparelho</h2>
         <span>Registro simples para acompanhar os meses.</span>
       </div>
-      <button class="btn danger small" onclick="apagarHistorico()" style="margin-bottom:14px;">
-        Apagar histórico
-      </button>
+
+      <!-- Botões do histórico -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <button class="btn danger small" onclick="apagarHistorico()">
+          Apagar histórico
+        </button>
+        <button id="btnRelatorio" class="btn small">
+          📄 Relatório PDF
+        </button>
+      </div>
+
       <div id="historico" class="history"></div>
     </section>
 
@@ -197,6 +204,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

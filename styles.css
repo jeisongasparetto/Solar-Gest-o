@@ -229,7 +229,7 @@ body {
 .kpi strong { font-size: 20px; color: var(--accent); font-weight: 700; letter-spacing: -0.5px; }
 .kpi.primary strong { color: var(--green-lt); }
 
-/* ===== TABELA ===== */
+/* ===== TABELA PRINCIPAL ===== */
 .table-wrap { overflow-x: auto; }
 table {
   width: 100%;
@@ -378,6 +378,116 @@ textarea#mensagem:focus { border-color: var(--accent); }
 }
 .historico-casa strong { color: var(--accent); }
 
+/* ===== PRODUÇÃO / INJEÇÃO NA REDE ===== */
+
+/* Botões de ação da seção — igual ao padrão .actions */
+.table-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/* Tabela solar — herda o mesmo visual da tabela principal */
+.solar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 500px;
+}
+
+.solar-table thead th {
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 10px 9px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.solar-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.solar-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+.solar-table tbody td {
+  padding: 9px 7px;
+  vertical-align: middle;
+}
+
+/* Inputs dentro da tabela solar — igual aos da tabela principal */
+.solar-table tbody td input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.solar-table tbody td input:focus { border-color: var(--accent); }
+.solar-table tbody td input::placeholder { color: var(--text2); opacity: 0.5; }
+
+/* Input de mês (type=month) — cor do ícone de calendário */
+.solar-table tbody td input[type="month"] {
+  color-scheme: dark;
+}
+
+/* Botão Remover — igual ao .btn.danger.small */
+.solar-table tbody td button {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger-lt);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.solar-table tbody td button:hover {
+  background: rgba(192,57,43,0.12);
+  transform: translateY(-1px);
+}
+.solar-table tbody td button:active { transform: translateY(0); }
+
+/* Resumo de produção — igual ao estilo dos KPIs secundários */
+.resumo-producao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.resumo-producao p {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.resumo-producao p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.resumo-producao p span {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* ===== FOOTER ===== */
 footer {
   text-align: center;
@@ -402,70 +512,4 @@ footer {
   .panel { padding: 16px; }
   .kpi strong { font-size: 17px; }
   .brand h1 { font-size: 17px; }
-}
-.table-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.table-actions button {
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #ff8a00;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.table-actions button:hover {
-  opacity: 0.9;
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-.solar-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.solar-table th,
-.solar-table td {
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-}
-
-.solar-table th {
-  background: #f3f3f3;
-  font-weight: 700;
-}
-
-.solar-table input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.solar-table button {
-  padding: 7px 10px;
-  border: none;
-  border-radius: 6px;
-  background: #c62828;
-  color: white;
-  cursor: pointer;
-}
-
-.resumo-producao {
-  margin-top: 15px;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
 }

@@ -403,3 +403,72 @@ footer {
   .kpi strong { font-size: 17px; }
   .brand h1 { font-size: 17px; }
 }
+.table-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.table-actions button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ff8a00;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.table-actions button:hover {
+  opacity: 0.9;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.solar-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.solar-table th,
+.solar-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.solar-table th {
+  background: #f3f3f3;
+  font-weight: 700;
+}
+
+.solar-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.solar-table button {
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #c62828;
+  color: white;
+  cursor: pointer;
+}
+
+.resumo-producao {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f7f7f7;
+}
+
+.resumo-producao p {
+  margin: 6px 0;
+}

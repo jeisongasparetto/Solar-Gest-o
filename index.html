@@ -144,8 +144,38 @@
         <strong id="kpiEconomia">R$ 0,00</strong>
       </div>
 
-    </section>
+<section class="card" id="producao-injecao">
+  <h2>Produção / Injeção na rede</h2>
 
+  <div class="table-actions">
+    <button onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
+    <button onclick="salvarProducaoInjecao()">Salvar produção</button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="solar-table">
+      <thead>
+        <tr>
+          <th>Mês</th>
+          <th>Inversor</th>
+          <th>Potência kWp</th>
+          <th>kWh Injetado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-producao-injecao"></tbody>
+    </table>
+  </div>
+
+  <div class="resumo-producao">
+    <p><strong>Total injetado:</strong> <span id="total-kwh-injetado">0</span> kWh</p>
+    <p><strong>Potência total:</strong> <span id="total-potencia-kwp">0</span> kWp</p>
+    <p><strong>Média:</strong> <span id="media-kwh-kwp">0</span> kWh/kWp</p>
+  </div>
+</section>
+      
+    </section>
+    
     <!-- HISTÓRICO -->
     <section class="panel">
       <div class="section-title">

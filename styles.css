@@ -466,9 +466,6 @@ footer {
   margin-top: 15px;
   padding: 12px;
   border-radius: 10px;
-  background: #f7f7f7;
-}
-
-.resumo-producao p {
-  margin: 6px 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
 }

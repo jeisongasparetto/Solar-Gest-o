@@ -185,17 +185,21 @@
         <span>Registro simples para acompanhar os meses.</span>
       </div>
 
-      <!-- Botões do histórico -->
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
-        <button class="btn danger small" onclick="apagarHistorico()">
-          Apagar histórico
-        </button>
+      <!-- Botão relatório — antes do histórico -->
+      <div style="margin-bottom:16px;">
         <button id="btnRelatorio" class="btn small">
           📄 Relatório PDF
         </button>
       </div>
 
       <div id="historico" class="history"></div>
+
+      <!-- Botão apagar — depois do histórico, separado -->
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+        <button class="btn danger small" onclick="apagarHistorico()">
+          🗑️ Apagar histórico
+        </button>
+      </div>
     </section>
 
   </main>

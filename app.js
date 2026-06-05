@@ -818,7 +818,7 @@ function exportarExcel() {
   XLSX.utils.book_append_sheet(wb,ws1,"Resumo");
   XLSX.utils.book_append_sheet(wb,ws2,"Detalhado");
   XLSX.utils.book_append_sheet(wb,ws3,"Produção");
-  const dataHoje=new Date().toLocaleDateString("pt-BR").replace(///g,"-");
+  const dataHoje = new Date().toLocaleDateString('pt-BR').split('/').join('-');
   XLSX.writeFile(wb,"solar_gestao_"+dataHoje+".xlsx");
   toast("📊 Excel exportado com sucesso!");
 }

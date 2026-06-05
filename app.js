@@ -508,3 +508,158 @@ document.addEventListener("DOMContentLoaded", () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+const STORAGE_PRODUCAO_INJECAO = "producaoInjecaoSolar";
+
+function carregarProducaoInjecao() {
+  const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
+  const tbody = document.getElementById("tabela-producao-injecao");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (dados.length === 0) {
+    dados.push({
+      mes: "",
+      inversor: "Sofar 5 kW",
+      potenciaKwp: "",
+      kwhInjetado: ""
+    });
+
+    dados.push({
+      mes: "",
+      inversor: "Sofar 5 kW",
+      potenciaKwp: "",
+      kwhInjetado: ""
+    });
+  }
+
+  dados.forEach((item, index) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>
+        <input type="month" value="${item.mes || ""}" data-index="${index}" data-campo="mes">
+      </td>
+
+      <td>
+        <input type="text" value="${item.inversor || ""}" placeholder="Ex: Sofar 5 kW" data-index="${index}" data-campo="inversor">
+      </td>
+
+      <td>
+        <input type="number" step="0.01" value="${item.potenciaKwp || ""}" placeholder="Ex: 5.85" data-index="${index}" data-campo="potenciaKwp">
+      </td>
+
+      <td>
+        <input type="number" step="0.01" value="${item.kwhInjetado || ""}" placeholder="Ex: 620" data-index="${index}" data-campo="kwhInjetado">
+      </td>
+
+      <td>
+        <button onclick="removerLinhaProducao(${index})">Remover</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  atualizarResumoProducao();
+}
+
+function salvarProducaoInjecao() {
+  const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
+  const dados = [];
+
+  linhas.forEach(linha => {
+    const inputs = linha.querySelectorAll("input");
+
+    const item = {
+      mes: "",
+      inversor: "",
+      potenciaKwp: 0,
+      kwhInjetado: 0
+    };
+
+    inputs.forEach(input => {
+      const campo = input.dataset.campo;
+
+      if (campo === "potenciaKwp" || campo === "kwhInjetado") {
+        item[campo] = Number(input.value.replace(",", ".")) || 0;
+      } else {
+        item[campo] = input.value;
+      }
+    });
+
+    if (item.mes || item.inversor || item.potenciaKwp || item.kwhInjetado) {
+      dados.push(item);
+    }
+  });
+
+  localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  atualizarResumoProducao();
+
+  if (typeof mostrarToast === "function") {
+    mostrarToast("Produção salva com sucesso!");
+  } else {
+    alert("Produção salva com sucesso!");
+  }
+}
+
+function adicionarLinhaProducao() {
+  salvarProducaoInjecao();
+
+  const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
+  dados.push({
+    mes: "",
+    inversor: "",
+    potenciaKwp: "",
+    kwhInjetado: ""
+  });
+
+  localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  carregarProducaoInjecao();
+}
+
+function removerLinhaProducao(index) {
+  const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
+  dados.splice(index, 1);
+
+  localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  carregarProducaoInjecao();
+}
+
+function atualizarResumoProducao() {
+  const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
+
+  let totalKwh = 0;
+  let totalKwp = 0;
+
+  linhas.forEach(linha => {
+    const potenciaInput = linha.querySelector('input[data-campo="potenciaKwp"]');
+    const kwhInput = linha.querySelector('input[data-campo="kwhInjetado"]');
+
+    const potencia = Number((potenciaInput?.value || "0").replace(",", ".")) || 0;
+    const kwh = Number((kwhInput?.value || "0").replace(",", ".")) || 0;
+
+    totalKwp += potencia;
+    totalKwh += kwh;
+  });
+
+  const media = totalKwp > 0 ? totalKwh / totalKwp : 0;
+
+  document.getElementById("total-kwh-injetado").textContent = totalKwh.toFixed(2);
+  document.getElementById("total-potencia-kwp").textContent = totalKwp.toFixed(2);
+  document.getElementById("media-kwh-kwp").textContent = media.toFixed(2);
+}
+
+document.addEventListener("input", function (event) {
+  if (event.target.closest("#producao-injecao")) {
+    atualizarResumoProducao();
+  }
+});
+
+document.addEventListener("DOMContentLoaded", carregarProducaoInjecao);

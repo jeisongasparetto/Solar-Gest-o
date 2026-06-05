@@ -322,6 +322,7 @@ function salvarHistorico() {
     receberNum: totalPagarNum,
     economia: document.getElementById("kpiEconomia").textContent,
     casas,
+    producao: JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]"),
     dadosCompletos: coletarDados()
   };
 
@@ -369,7 +370,15 @@ function renderHistorico() {
           `<div class="historico-casa">🏠 ${c.nome}: <strong>${moeda(c.pagar)}</strong></div>`
         ).join("")}</div>`
       : "";
-
+const producaoHtml = (item.producao && item.producao.length)
+  ? `<div class="historico-casas" style="margin-top:8px;">
+      <strong>Produção / Injeção:</strong>
+      ${item.producao.map(p =>
+        `<div class="historico-casa">⚡ ${p.inversor}: <strong>${p.kwhInjetado} kWh</strong> | ${p.potenciaKwp} kWp</div>`
+      ).join("")}
+    </div>`
+  : "";
+    
     return `
       <div class="history-item">
         <div class="history-item-header">
@@ -383,6 +392,7 @@ function renderHistorico() {
           A receber: ${item.receber} &nbsp;|&nbsp; Economia: ${item.economia} &nbsp;|&nbsp; ${item.data}
         </div>
         ${casasHtml}
+        ${producaoHtml}
       </div>
     `;
   }).join("");
@@ -551,7 +561,7 @@ function carregarProducaoInjecao() {
       </td>
 
       <td>
-        <input type="number" step="0.01" value="${item.kwhInjetado || ""}" placeholder="Ex: 620" data-index="${index}" data-campo="kwhInjetado">
+        <input type="number" step="1" min="0" value="${item.kwhInjetado || ""}" placeholder="Ex: 620" data-index="${index}" data-campo="kwhInjetado">
       </td>
 
       <td>
@@ -601,6 +611,23 @@ function salvarProducaoInjecao() {
   toast("✅ Produção salva com sucesso.");
 }
 
+function adicionarLinhaProducao() {
+  salvarProducaoInjecao();
+
+  const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
+  dados.push({
+    mes: "",
+    inversor: "",
+    potenciaKwp: "",
+    kwhInjetado: ""
+  });
+
+  localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  carregarProducaoInjecao();
+}
+
 function removerLinhaProducao(index) {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
 
@@ -630,9 +657,9 @@ function atualizarResumoProducao() {
 
   const media = totalKwp > 0 ? totalKwh / totalKwp : 0;
 
-  document.getElementById("total-kwh-injetado").textContent = totalKwh.toFixed(2);
+  document.getElementById("total-kwh-injetado").textContent = Math.round(totalKwh);
   document.getElementById("total-potencia-kwp").textContent = totalKwp.toFixed(2);
-  document.getElementById("media-kwh-kwp").textContent = media.toFixed(2);
+  document.getElementById("media-kwh-kwp").textContent = media.toFixed(0);
 }
 
 document.addEventListener("input", function (event) {

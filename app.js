@@ -583,7 +583,7 @@ function salvarProducaoInjecao() {
       const campo = input.dataset.campo;
 
       if (campo === "potenciaKwp" || campo === "kwhInjetado") {
-        item[campo] = Number(input.value.replace(",", ".")) || 0;
+        item[campo] = Number(String(input.value).replace(",", ".")) || 0;
       } else {
         item[campo] = input.value;
       }
@@ -596,30 +596,9 @@ function salvarProducaoInjecao() {
 
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
 
-  atualizarResumoProducao();
-
-  if (typeof mostrarToast === "function") {
-    mostrarToast("Produção salva com sucesso!");
-  } else {
-    alert("Produção salva com sucesso!");
-  }
-}
-
-function adicionarLinhaProducao() {
-  salvarProducaoInjecao();
-
-  const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-
-  dados.push({
-    mes: "",
-    inversor: "",
-    potenciaKwp: "",
-    kwhInjetado: ""
-  });
-
-  localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
-
   carregarProducaoInjecao();
+
+  toast("✅ Produção salva com sucesso.");
 }
 
 function removerLinhaProducao(index) {

@@ -871,11 +871,6 @@ function carregarProducaoInjecao() {
 
   tbody.innerHTML = "";
 
-  if (dados.length === 0) {
-    dados.push({ mes: "", inversor: "Sofar 5 kW", potenciaKwp: "", kwhInjetado: "" });
-    dados.push({ mes: "", inversor: "Sofar 5 kW", potenciaKwp: "", kwhInjetado: "" });
-  }
-
   dados.forEach((item, index) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -919,16 +914,24 @@ function salvarProducaoInjecao() {
 }
 
 function adicionarLinhaProducao() {
-  salvarProducaoInjecao();
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-  dados.push({ mes: "", inversor: "", potenciaKwp: "", kwhInjetado: "" });
+
+  dados.push({
+    mes: valor("mes") || "",
+    inversor: "",
+    potenciaKwp: "",
+    kwhInjetado: ""
+  });
+
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
 }
 
 function removerLinhaProducao(index) {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
   dados.splice(index, 1);
+
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
 }

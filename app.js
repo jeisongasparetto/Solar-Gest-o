@@ -775,7 +775,16 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRemoverCasa").addEventListener("click", removerCasa);
   document.getElementById("btnRelatorio").addEventListener("click", gerarRelatorioHistorico);
   document.getElementById("btnExcel").addEventListener("click", exportarExcel);
+  document.getElementById("btnToggleHistorico").addEventListener("click", () => {
+  const box = document.getElementById("historicoWrapper");
+  const btn = document.getElementById("btnToggleHistorico");
 
+  const aberto = box.style.display !== "none";
+
+  box.style.display = aberto ? "none" : "block";
+  btn.textContent = aberto ? "▼" : "▲";
+});
+  
   ["mes", "desconto"].forEach(id => {
     document.getElementById(id).addEventListener("input", calcular);
   });

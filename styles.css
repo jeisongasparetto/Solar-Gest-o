@@ -513,11 +513,13 @@ footer {
   .kpi strong { font-size: 17px; }
   .brand h1 { font-size: 17px; }
 
-  .config-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-    width: 100%;
+  .config-grid input#mes[type="month"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
   }
 
   .config-grid label {

@@ -180,31 +180,39 @@
     </section>
 
     <!-- HISTÓRICO -->
-    <section class="panel">
-      <div class="section-title">
-        <h2>Histórico salvo neste aparelho</h2>
-        <span>Registro simples para acompanhar os meses.</span>
-      </div>
+   <section class="panel">
+  <div class="section-title historico-header">
+    <div>
+      <h2>Histórico salvo neste aparelho</h2>
+      <span>Registro simples para acompanhar os meses.</span>
+    </div>
 
-      <!-- Botões — antes do histórico -->
-      <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;">
-        <button id="btnRelatorio" class="btn small">
-          📄 Relatório PDF
-        </button>
-        <button id="btnExcel" class="btn secondary small">
-          📊 Exportar Excel
-        </button>
-      </div>
+    <button id="btnToggleHistorico" class="btn secondary small" type="button">
+      ▼
+    </button>
+  </div>
 
-      <div id="historico" class="history"></div>
+  <div id="historicoWrapper" style="display:none; margin-top:14px;">
 
-      <!-- Botão apagar — depois do histórico, separado -->
-      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
-        <button class="btn danger small" onclick="apagarHistorico()">
-          🗑️ Apagar histórico
-        </button>
-      </div>
-    </section>
+    <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="btnRelatorio" class="btn small">
+        📄 Relatório PDF
+      </button>
+      <button id="btnExcel" class="btn secondary small">
+        📊 Exportar Excel
+      </button>
+    </div>
+
+    <div id="historico" class="history"></div>
+
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+      <button class="btn danger small" onclick="apagarHistorico()">
+        🗑️ Apagar histórico
+      </button>
+    </div>
+
+  </div>
+</section>
 
   </main>
 
@@ -212,6 +220,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

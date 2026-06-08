@@ -761,7 +761,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHistorico();
 
   document.getElementById("btnCalcular").addEventListener("click", calcular);
-  document.getElementById("btnSalvar").addEventListener("click", salvarDados);
   document.getElementById("btnHistorico").addEventListener("click", salvarHistorico);
   document.getElementById("btnLimpar").addEventListener("click", limparDados);
   document.getElementById("btnBackup").addEventListener("click", baixarBackup);

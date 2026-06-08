@@ -512,4 +512,24 @@ footer {
   .panel { padding: 16px; }
   .kpi strong { font-size: 17px; }
   .brand h1 { font-size: 17px; }
+
+  input[type="month"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .config-grid label {
+    min-width: 0;
+  }
+
+  #producao-injecao input[type="month"] {
+    width: 130px;
+    max-width: 130px;
+  }
+
+  #producao-injecao .table-wrap {
+    overflow-x: auto;
+  }
 }

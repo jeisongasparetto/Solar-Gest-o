@@ -27,11 +27,16 @@
       </div>
       <div>
         <h1>Solar Gestão</h1>
-        <p>Controle de cobrança de energia solar para imóveis alugados</p>
+        <p>Controle de cobrança de energia solar para imóveis/usinas </p>
       </div>
     </div>
     <div class="top-actions">
-      <button id="btnSalvar" class="btn">Salvar</button>
+       <button id="btnRelatorio" class="btn small">
+        📄 Relatório PDF
+      </button>
+      <button id="btnExcel" class="btn secondary small">
+        📊 Exportar Excel
+      </button>
       <button id="btnImprimir" class="btn secondary">PDF</button>
     </div>
   </header>
@@ -50,7 +55,7 @@
     <input id="mes" type="month" onclick="this.showPicker()" />
     </label>
         <label>
-          Desconto ao inquilino (%)
+          Desconto ao Cliente (%)
           <input id="desconto" type="text" value="10" />
         </label>
       </div>
@@ -67,9 +72,9 @@
         <table id="tabela">
           <thead>
             <tr>
-              <th>Casa</th>
+              <th> Endereço </th>
               <th>Unidade consumidora</th>
-              <th>Inquilino</th>
+              <th>Cliente</th>
               <th>Consumo da fatura (R$)</th>
               <th>Valor injetado (R$)</th>
               <th>Desconto</th>
@@ -114,7 +119,7 @@
     <section class="panel">
       <div class="section-title">
         <h2>Texto para WhatsApp</h2>
-        <span>Copie e envie ao inquilino ou ao responsável.</span>
+        <span>Copie e envie ao cliente ou ao responsável.</span>
       </div>
       <textarea id="mensagem" placeholder="Clique em gerar texto geral ou em copiar na linha da casa."></textarea>
       <div class="actions two">
@@ -193,12 +198,6 @@
   <div id="historicoWrapper" style="display:none; margin-top:14px;">
 
     <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="btnRelatorio" class="btn small">
-        📄 Relatório PDF
-      </button>
-      <button id="btnExcel" class="btn secondary small">
-        📊 Exportar Excel
-      </button>
     </div>
     <button id="btnBackup" class="btn secondary small">
   💾 Backup
@@ -223,6 +222,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

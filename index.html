@@ -43,31 +43,24 @@
 
   <main class="container">
 
-    <!-- CONFIGURAÇÃO -->
-    <section class="panel">
-      <div class="section-title">
-        <h2>Configuração</h2>
-        <span>Preencha o mês e o desconto aplicado</span>
-      </div>
-      <div class="config-grid">
-    <label>
-    Mês de referência
-    <input id="mes" type="month" onclick="this.showPicker()" />
-    </label>
-        <label>
-          Desconto ao Cliente (%)
-          <input id="desconto" type="text" value="10" />
-        </label>
-      </div>
-    </section>
 
-    <!-- LANÇAMENTOS -->
+    <!-- FATURAMENTO -->
     <section class="panel">
       <div class="section-title">
         <h2>Faturamento</h2>
         <span>Digite somente os campos em branco. Os cálculos serão automáticos.</span>
       </div>
+<div class="config-grid" style="margin-bottom:16px;">
+  <label>
+    Mês de referência
+    <input id="mes" type="month" onclick="this.showPicker()" />
+  </label>
 
+  <label>
+    Desconto ao inquilino (%)
+    <input id="desconto" type="text" value="10" />
+  </label>
+</div>
       <div class="table-wrap">
         <table id="tabela">
           <thead>
@@ -222,6 +215,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

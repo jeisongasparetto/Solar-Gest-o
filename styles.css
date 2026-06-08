@@ -513,15 +513,25 @@ footer {
   .kpi strong { font-size: 17px; }
   .brand h1 { font-size: 17px; }
 
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .config-grid label {
+    min-width: 0;
+  }
+
+  .config-grid input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   input[type="month"] {
     width: 100%;
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
-  }
-
-  .config-grid label {
-    min-width: 0;
   }
 
   #producao-injecao input[type="month"] {

@@ -514,29 +514,35 @@ footer {
   .brand h1 { font-size: 17px; }
 
   .config-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
   }
 
   .config-grid label {
+    width: 100%;
     min-width: 0;
   }
 
   .config-grid input {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  input[type="month"] {
+    display: block;
     width: 100%;
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
+  }
+
+  #mes {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   #producao-injecao input[type="month"] {
     width: 130px;
     max-width: 130px;
+    min-width: 130px;
   }
 
   #producao-injecao .table-wrap {

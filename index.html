@@ -134,13 +134,29 @@
 
       <div class="actions">
         <button id="btnCalcular" class="btn secondary">Calcular agora</button>
-        <button id="btnTextoGeral" class="btn secondary">Gerar texto geral</button>
-        <button id="btnHistorico" class="btn secondary">Salvar no histórico Produção e Faturamento</button>
         <button id="btnLimpar" class="btn danger">Limpar</button>
         <input id="fileImport" type="file" accept=".json" hidden />
       </div>
     </section>
 
+<!-- FECHAMENTO DO MÊS -->
+<section class="panel">
+  <div class="section-title">
+    <h2>Fechamento do mês</h2>
+    <span>Confira os valores e salve o faturamento com a produção no histórico.</span>
+  </div>
+
+  <div class="actions">
+    <button id="btnHistorico" class="btn">
+      💾 Salvar mês no histórico
+    </button>
+
+    <button id="btnTextoGeral" class="btn secondary">
+      Gerar texto geral
+    </button>
+  </div>
+</section
+    
     <!-- WHATSAPP -->
     <section class="panel">
       <div class="section-title">
@@ -214,6 +230,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

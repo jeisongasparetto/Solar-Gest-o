@@ -105,8 +105,6 @@
         <button id="btnCalcular" class="btn">Calcular agora</button>
         <button id="btnTextoGeral" class="btn secondary">Gerar texto geral</button>
         <button id="btnHistorico" class="btn secondary">Salvar no histórico</button>
-        <button id="btnBackup" class="btn secondary">Baixar backup</button>
-        <button id="btnImportar" class="btn secondary">Importar backup</button>
         <button id="btnLimpar" class="btn danger">Limpar</button>
         <input id="fileImport" type="file" accept=".json" hidden />
       </div>
@@ -202,7 +200,12 @@
         📊 Exportar Excel
       </button>
     </div>
-
+    <button id="btnBackup" class="btn secondary small">
+  💾 Backup
+</button>
+<button id="btnImportar" class="btn secondary small">
+  📂 Restaurar Backup
+</button>
     <div id="historico" class="history"></div>
 
     <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
@@ -220,6 +223,6 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

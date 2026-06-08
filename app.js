@@ -286,8 +286,14 @@ function limparDados() {
 }
 
 // ===== HISTÓRICO =====
+function filtrarProducaoDoMes(mesHistorico) {
+  const producao = JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]");
+
+  return producao.filter(p => p.mes === mesHistorico);
+}
 function salvarHistorico() {
   calcular();
+
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
 
   const percentual = numero("desconto") / 100;
@@ -295,45 +301,59 @@ function salvarHistorico() {
   const casas = [];
 
   for (let i = 1; i <= qtdCasas; i++) {
-    const injetado = numero("injetado" + i);
-    const pagar = injetado - injetado * percentual;
-    totalPagarNum += pagar;
-
     const d = dadosCasa(i);
 
     if (d.consumo > 0 || d.injetado > 0) {
+      totalPagarNum += d.pagar;
+
       casas.push({
         nome: d.inquilino ? d.inquilino : d.casa,
-        pagar
+        pagar: d.pagar
       });
     }
   }
 
+  const mesAtual = valor("mes") || "sem mês";
+
   const registro = {
     id: Date.now(),
     data: new Date().toLocaleString("pt-BR"),
-    mes: valor("mes") || "sem mês",
+    mes: mesAtual,
     desconto: valor("desconto") || "10",
-    receber: document.getElementById("kpiReceber").textContent,
+    receber: moeda(totalPagarNum),
     receberNum: totalPagarNum,
     economia: document.getElementById("kpiEconomia").textContent,
     casas,
-    producao: JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]"),
+    producao: filtrarProducaoDoMes(mesAtual),
     dadosCompletos: coletarDados()
   };
 
   if (historicoEditandoIndex !== null && historico[historicoEditandoIndex]) {
     const idAntigo = historico[historicoEditandoIndex].id;
+
     historico[historicoEditandoIndex] = {
       ...registro,
       id: idAntigo,
       data: new Date().toLocaleString("pt-BR") + " — alterado"
     };
+
     historicoEditandoIndex = null;
     toast("✅ Histórico alterado com sucesso.");
   } else {
-    historico.unshift(registro);
-    toast("📅 Histórico salvo.");
+    const indexMesmoMes = historico.findIndex(item => item.mes === mesAtual);
+
+    if (indexMesmoMes >= 0) {
+      historico[indexMesmoMes] = {
+        ...registro,
+        id: historico[indexMesmoMes].id,
+        data: new Date().toLocaleString("pt-BR") + " — atualizado"
+      };
+
+      toast("🔄 Histórico do mês atualizado.");
+    } else {
+      historico.unshift(registro);
+      toast("📅 Histórico salvo.");
+    }
   }
 
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));

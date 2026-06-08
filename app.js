@@ -460,9 +460,11 @@ function apagarHistorico() {
 // ===== BACKUP =====
 function baixarBackup() {
   const backup = {
-    dados:     coletarDados(),
-    historico: JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]")
+    dados: coletarDados(),
+    historico: JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]"),
+    producao: JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]")
   };
+
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
@@ -487,6 +489,10 @@ function importarBackup(file) {
         localStorage.setItem("solarGestaoHistorico", JSON.stringify(backup.historico));
         renderHistorico();
       }
+      if (backup.producao) {
+  localStorage.setItem("producaoInjecaoSolar", JSON.stringify(backup.producao));
+  carregarProducaoInjecao();
+}
       toast("⬆ Backup importado com sucesso.");
     } catch (err) {
       toast("Arquivo inválido.", "error");
@@ -865,7 +871,7 @@ function carregarProducaoInjecao() {
   dados.forEach((item, index) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input type="month" value="${item.mes || ""}" data-index="${index}" data-campo="mes"></td>
+      <td><input type="month" onclick="this.showPicker()" value="${item.mes || ""}" data-index="${index}" data-campo="mes"></td>
       <td><input type="text" value="${item.inversor || ""}" placeholder="Ex: Sofar 5 kW" data-index="${index}" data-campo="inversor"></td>
       <td><input type="number" step="0.01" value="${item.potenciaKwp || ""}" placeholder="Ex: 5.85" data-index="${index}" data-campo="potenciaKwp"></td>
       <td><input type="number" step="1" min="0" value="${item.kwhInjetado || ""}" placeholder="Ex: 620" data-index="${index}" data-campo="kwhInjetado"></td>

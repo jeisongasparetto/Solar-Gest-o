@@ -1074,7 +1074,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnBackup").addEventListener("click", baixarBackup);
   document.getElementById("btnImportar").addEventListener("click", () => document.getElementById("fileImport").click());
   document.getElementById("fileImport").addEventListener("change", e => importarBackup(e.target.files[0]));
-  document.getElementById("btnImprimir").addEventListener("click", () => window.print());
   document.getElementById("btnTextoGeral").addEventListener("click", gerarMensagemGeral);
   document.getElementById("btnCopiarTexto").addEventListener("click", () => copiarTexto(document.getElementById("mensagem").value || ""));
   document.getElementById("btnLimparTexto").addEventListener("click", () => { document.getElementById("mensagem").value = ""; });

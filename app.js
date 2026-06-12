@@ -711,7 +711,7 @@ function gerarRelatorioHistorico() {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
       color: #172033;
-      background: #ffffff;
+      background: #F4F7FA;
       padding: 26px 30px;
     }
 
@@ -751,20 +751,21 @@ function gerarRelatorioHistorico() {
       align-items: stretch;
     }
 
-    .kpi-box {
-      flex: 1;
-      border: 1px solid #dfe5ec;
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 12px 13px;
-      min-height: 72px;
-    }
+  .kpi-box {
+  flex: 1;
+  border: 1px solid #D8E3EC;
+  background: #FFFFFF;
+  border-radius: 10px;
+  padding: 12px 13px;
+  min-height: 72px;
+  box-shadow: 0 2px 8px rgba(13,27,42,0.08);
+}
 
     .kpi-box.destaque {
-      background: #0D1B2A;
-      border-color: #0D1B2A;
-      color: #ffffff;
-    }
+  background: linear-gradient(135deg,#0D1B2A,#1B5E20);
+  border-color: #1B5E20;
+  color: #ffffff;
+}
 
     .kpi-box label {
       display: block;
@@ -786,8 +787,8 @@ function gerarRelatorioHistorico() {
     }
 
     .intro {
-      background: #f8fafc;
-      border-left: 4px solid #0D1B2A;
+      background: #EEF7FF;
+      border-left: 4px solid #1B5E20;
       padding: 10px 12px;
       border-radius: 8px;
       color: #4b5563;
@@ -819,7 +820,7 @@ function gerarRelatorioHistorico() {
     }
 
     th {
-      background: #0D1B2A;
+  background: #12324A;
       color: #fff;
       font-size: 8.5px;
       font-weight: 700;
@@ -850,20 +851,21 @@ function gerarRelatorioHistorico() {
       color: #0D1B2A;
     }
 
-    .mes-bloco {
-      margin-bottom: 18px;
-      border: 1px solid #dde4ec;
-      border-radius: 12px;
-      overflow: hidden;
-      page-break-inside: avoid;
-      background: #ffffff;
-    }
+  .mes-bloco {
+  margin-bottom: 18px;
+  border: 1px solid #D6E4F0;
+  border-radius: 12px;
+  overflow: hidden;
+  page-break-inside: avoid;
+  background: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(13,27,42,0.06);
+}
 
     .mes-topo {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #f3f6f9;
+     background: linear-gradient(90deg,#EAF4FF,#F2FFF6);
       padding: 12px 14px;
       border-bottom: 1px solid #dde4ec;
     }
@@ -921,9 +923,9 @@ function gerarRelatorioHistorico() {
       white-space: nowrap;
     }
 
-    .mes-resumo .receber {
-      background: #f8fafc;
-    }
+  .mes-resumo .receber {
+  background: #EAF7EF;
+}
 
     .mes-resumo .receber strong {
       color: #0D1B2A;
@@ -1000,7 +1002,7 @@ function gerarRelatorioHistorico() {
   </div>
 
   <div class="intro">
-    Este relatório consolida todos os meses salvos no Solar Gestão, somando a produção injetada na rede, os valores compensados nas unidades, o desconto concedido aos inquilinos e o valor líquido a receber.
+    Este relatório consolida todos os meses salvos no Solar Gestão.
   </div>
 
   <h2>Detalhamento mês a mês</h2>

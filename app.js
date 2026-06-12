@@ -293,6 +293,7 @@ function filtrarProducaoDoMes(mesHistorico) {
 }
 function salvarHistorico() {
   calcular();
+  salvarProducaoInjecao();
 
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
 
@@ -1161,7 +1162,7 @@ function carregarProducaoInjecao() {
   atualizarResumoProducao();
 }
 
-function salvarProducaoInjecao() {
+function salvarProducaoInjecao(mostrarToast = true) {
   const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
   const dados = [];
 
@@ -1185,6 +1186,7 @@ function salvarProducaoInjecao() {
 
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
+  if (mostrarToast) {
   toast("✅ Produção salva com sucesso.");
 }
 
@@ -1233,6 +1235,11 @@ function atualizarResumoProducao() {
 document.addEventListener("input", function (event) {
   if (event.target.closest("#producao-injecao")) {
     atualizarResumoProducao();
+
+    clearTimeout(window.timerSalvarProducao);
+    window.timerSalvarProducao = setTimeout(() => {
+      salvarProducaoInjecao(false);
+    }, 500);
   }
 });
 

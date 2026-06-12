@@ -161,8 +161,22 @@ function dadosCasa(i) {
 // ===== MENSAGENS WHATSAPP =====
 function gerarMensagemCasa(i) {
   calcular();
-  const mes = valor("mes") || "mês não informado";
-  const d   = dadosCasa(i);
+
+  const mesBruto = valor("mes") || "";
+  let mes = "mês não informado";
+
+  if (mesBruto.includes("-")) {
+    const [ano, numeroMes] = mesBruto.split("-");
+    const meses = [
+      "Janeiro", "Fevereiro", "Março", "Abril",
+      "Maio", "Junho", "Julho", "Agosto",
+      "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    mes = `${meses[Number(numeroMes) - 1]}/${ano}`;
+  }
+
+  const d = dadosCasa(i);
   const nome = d.inquilino ? d.inquilino : d.casa;
 
   return `☀️ ENERGIA SOLAR – ${mes}
@@ -172,14 +186,28 @@ Unidade consumidora: ${d.uc}
 
 Consumo da fatura: ${moeda(d.consumo)}
 Compensado pelo solar: ${moeda(d.injetado)}
-Desconto repassado: ${moeda(d.economia)}
+Desconto concedido: ${moeda(d.economia)}
 
 ✅ Valor a pagar no aluguel: ${moeda(d.pagar)}`;
 }
 
 function gerarMensagemGeral() {
   calcular();
-  const mes  = valor("mes") || "mês não informado";
+  const mesBruto = valor("mes") || "";
+
+let mes = "mês não informado";
+
+if (mesBruto.includes("-")) {
+  const [ano, numeroMes] = mesBruto.split("-");
+
+  const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril",
+    "Maio", "Junho", "Julho", "Agosto",
+    "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
+  mes = `${meses[Number(numeroMes) - 1]}/${ano}`;
+}
   const desc = valor("desconto") || "10";
   let msg = `☀️ RESUMO ENERGIA SOLAR – ${mes}
 Desconto aplicado: ${desc}%
@@ -193,14 +221,17 @@ Desconto aplicado: ${desc}%
 UC: ${d.uc}
 Consumo da fatura: ${moeda(d.consumo)}
 Compensado pelo solar: ${moeda(d.injetado)}
-Desconto repassado: ${moeda(d.economia)}
+Desconto concedido: ${moeda(d.economia)}
 ✅ Valor a pagar no aluguel: ${moeda(d.pagar)}
 
 `;
   }
 
-  msg += `TOTAL A RECEBER: ${document.getElementById("kpiReceber").textContent}
-ECONOMIA TOTAL: ${document.getElementById("kpiEconomia").textContent}`;
+ msg += `
+━━━━━━━━━━━━━━
+
+💰 TOTAL A RECEBER: ${document.getElementById("kpiReceber").textContent}
+🎁 DESCONTO TOTAL CONCEDIDO: ${document.getElementById("kpiEconomia").textContent}`;
 
   document.getElementById("mensagem").value = msg;
 }

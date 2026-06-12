@@ -510,125 +510,192 @@ function gerarRelatorioHistorico() {
     return;
   }
 
-  // Ordena do mais antigo para o mais recente (inverte a lista que está em ordem decrescente)
   const historicoOrdenado = [...historico].reverse();
 
-  // Totais acumulados
-  const totalAcumulado    = historico.reduce((acc, i) => acc + (i.receberNum || 0), 0);
-  const totalEconomia     = historico.reduce((acc, i) => {
-    const eco = i.dadosCompletos?.casas?.reduce((s, c) => {
-      const inj = parseFloat(String(c.injetado || "0").replace(",", ".")) || 0;
-      const desc = parseFloat(i.desconto || "10") / 100;
-      return s + inj * desc;
-    }, 0) || 0;
-    return acc + eco;
-  }, 0);
+  const parseNum = v => parseFloat(String(v || "0").replace(/\./g, "").replace(",", ".")) || 0;
+
+  const formatKwh = v => {
+    const n = Number(v) || 0;
+    return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " kWh";
+  };
+
+  const mesBonito = mes => {
+    if (!mes || !mes.includes("-")) return mes || "Sem mês";
+    const [ano, m] = mes.split("-");
+    const nomes = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+    return `${nomes[Number(m) - 1] || m}/${ano}`;
+  };
+
+  const totais = historico.reduce((acc, item) => {
+    const desc = parseFloat(item.desconto || "10") / 100;
+
+    let brutoMes = 0;
+    let descontoMes = 0;
+
+    (item.dadosCompletos?.casas || []).forEach(c => {
+      const inj = parseNum(c.injetado);
+      brutoMes += inj;
+      descontoMes += inj * desc;
+    });
+
+    const producaoMes = (item.producao || []).reduce((s, p) => {
+      return s + (Number(p.kwhInjetado) || 0);
+    }, 0);
+
+    acc.totalFaturado += brutoMes;
+    acc.totalDesconto += descontoMes;
+    acc.totalReceber += item.receberNum || (brutoMes - descontoMes);
+    acc.totalProducao += producaoMes;
+
+    return acc;
+  }, {
+    totalFaturado: 0,
+    totalDesconto: 0,
+    totalReceber: 0,
+    totalProducao: 0
+  });
+
   const totalMeses = historico.length;
 
-  // Montar HTML do relatório
   const dataGeracao = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit", month: "long", year: "numeric"
   });
 
-  // Resumo mensal (tabela)
-  const linhasResumo = historicoOrdenado.map(item => `
-    <tr>
-      <td>${item.mes}</td>
-      <td class="num">${item.receber}</td>
-      <td class="num">${item.economia}</td>
-      <td class="num">${item.desconto}%</td>
-      <td>${item.data}</td>
-    </tr>
-  `).join("");
-
-  // Detalhes por mês
   const detalhesMeses = historicoOrdenado.map(item => {
-    // Casas
+    const descPerc = parseFloat(item.desconto || "10") / 100;
+
+    let totalFaturadoMes = 0;
+    let totalDescontoMes = 0;
+    let totalReceberMes = 0;
+
     const linhasCasas = (item.dadosCompletos?.casas || item.casas || []).map((c, idx) => {
-      // tenta pegar dados completos primeiro
       if (item.dadosCompletos?.casas) {
         const casa = item.dadosCompletos.casas[idx];
         if (!casa) return "";
-        const inj  = parseFloat(String(casa.injetado || "0").replace(",", ".")) || 0;
-        const cons = parseFloat(String(casa.consumo  || "0").replace(",", ".")) || 0;
-        const desc = parseFloat(item.desconto || "10") / 100;
-        const eco  = inj * desc;
-        const pag  = inj - eco;
+
+        const inj = parseNum(casa.injetado);
+        const cons = parseNum(casa.consumo);
+        const desconto = inj * descPerc;
+        const pagar = inj - desconto;
         const nome = casa.inquilino || casa.casa || ("Casa " + (idx + 1));
+
         if (inj === 0 && cons === 0) return "";
+
+        totalFaturadoMes += inj;
+        totalDescontoMes += desconto;
+        totalReceberMes += pagar;
+
         return `
           <tr>
             <td>${nome}</td>
             <td>${casa.uc || "—"}</td>
-            <td class="num">R$ ${cons.toFixed(2).replace(".", ",")}</td>
-            <td class="num">R$ ${inj.toFixed(2).replace(".", ",")}</td>
-            <td class="num">R$ ${eco.toFixed(2).replace(".", ",")}</td>
-            <td class="num total-cell">R$ ${pag.toFixed(2).replace(".", ",")}</td>
-          </tr>`;
-      } else {
-        // fallback para dados resumidos
-        return `
-          <tr>
-            <td>${c.nome || "—"}</td>
-            <td>—</td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num total-cell">${moeda(c.pagar)}</td>
+            <td class="num">${moeda(cons)}</td>
+            <td class="num">${moeda(inj)}</td>
+            <td class="num">${moeda(desconto)}</td>
+            <td class="num total-cell">${moeda(pagar)}</td>
           </tr>`;
       }
+
+      totalReceberMes += Number(c.pagar) || 0;
+
+      return `
+        <tr>
+          <td>${c.nome || "—"}</td>
+          <td>—</td>
+          <td class="num">—</td>
+          <td class="num">—</td>
+          <td class="num">—</td>
+          <td class="num total-cell">${moeda(c.pagar)}</td>
+        </tr>`;
     }).filter(Boolean).join("");
 
-    // Produção/injeção
-    const linhasProducao = (item.producao || []).map(p => `
-      <tr>
-        <td>${p.inversor || "—"}</td>
-        <td class="num">${p.potenciaKwp || 0} kWp</td>
-        <td class="num">${p.kwhInjetado || 0} kWh</td>
-        <td class="num">${p.potenciaKwp > 0 ? (p.kwhInjetado / p.potenciaKwp).toFixed(1) : "—"} kWh/kWp</td>
-        <td>${p.mes || "—"}</td>
-      </tr>
-    `).join("");
+    const totalProducaoMes = (item.producao || []).reduce((s, p) => s + (Number(p.kwhInjetado) || 0), 0);
+
+    const linhasProducao = (item.producao || []).map(p => {
+      const kwh = Number(p.kwhInjetado) || 0;
+      const kwp = Number(p.potenciaKwp) || 0;
+      const participacao = totalProducaoMes > 0 ? ((kwh / totalProducaoMes) * 100).toFixed(1) : "0.0";
+
+      return `
+        <tr>
+          <td>${p.inversor || "—"}</td>
+          <td class="num">${kwp.toFixed(2)} kWp</td>
+          <td class="num">${formatKwh(kwh)}</td>
+          <td class="num">${kwp > 0 ? (kwh / kwp).toFixed(1) : "—"} kWh/kWp</td>
+          <td class="num">${participacao}%</td>
+        </tr>`;
+    }).join("");
 
     const tabelaCasas = linhasCasas ? `
-      <h4>Imóveis</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>Imóvel / Inquilino</th>
-            <th>UC</th>
-            <th class="num">Fatura</th>
-            <th class="num">Compensado</th>
-            <th class="num">Desconto</th>
-            <th class="num">A pagar</th>
-          </tr>
-        </thead>
-        <tbody>${linhasCasas}</tbody>
-      </table>` : "";
+      <div class="table-section">
+        <h4>Imóveis / Inquilinos</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Imóvel / Inquilino</th>
+              <th>UC</th>
+              <th class="num">Fatura</th>
+              <th class="num">Compensado</th>
+              <th class="num">Desconto</th>
+              <th class="num">A receber</th>
+            </tr>
+          </thead>
+          <tbody>${linhasCasas}</tbody>
+        </table>
+      </div>` : "";
 
     const tabelaProducao = linhasProducao ? `
-      <h4>Produção / Injeção na rede</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>Inversor</th>
-            <th class="num">Potência</th>
-            <th class="num">kWh Injetado</th>
-            <th class="num">Média</th>
-            <th>Mês ref.</th>
-          </tr>
-        </thead>
-        <tbody>${linhasProducao}</tbody>
-      </table>` : "";
+      <div class="table-section">
+        <h4>Produção / Injeção na rede</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Inversor</th>
+              <th class="num">Potência</th>
+              <th class="num">kWh injetado</th>
+              <th class="num">Média</th>
+              <th class="num">% do mês</th>
+            </tr>
+          </thead>
+          <tbody>${linhasProducao}</tbody>
+        </table>
+      </div>` : "";
 
     return `
       <div class="mes-bloco">
-        <div class="mes-header">
-          <span class="mes-titulo">${item.mes}</span>
-          <span class="mes-meta">Desconto: ${item.desconto}% &nbsp;|&nbsp; A receber: <strong>${item.receber}</strong> &nbsp;|&nbsp; Economia: ${item.economia}</span>
+        <div class="mes-topo">
+          <div>
+            <div class="mes-label">Detalhamento mensal</div>
+            <div class="mes-titulo">${mesBonito(item.mes)}</div>
+          </div>
+          <div class="mes-desconto">Desconto aplicado: <strong>${item.desconto || "10"}%</strong></div>
         </div>
+
+        <div class="mes-resumo">
+          <div>
+            <span>Produção injetada</span>
+            <strong>${formatKwh(totalProducaoMes)}</strong>
+          </div>
+          <div>
+            <span>Total faturado</span>
+            <strong>${moeda(totalFaturadoMes)}</strong>
+          </div>
+          <div>
+            <span>Desconto concedido</span>
+            <strong>${moeda(totalDescontoMes)}</strong>
+          </div>
+          <div class="receber">
+            <span>Total a receber</span>
+            <strong>${moeda(totalReceberMes || item.receberNum || 0)}</strong>
+          </div>
+        </div>
+
         ${tabelaCasas}
         ${tabelaProducao}
+
+        <div class="mes-rodape">
+          Salvo em: ${item.data || "—"}
+        </div>
       </div>`;
   }).join("");
 
@@ -639,50 +706,264 @@ function gerarRelatorioHistorico() {
   <title>Relatório Solar Gestão</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1a1a1a; background: #fff; padding: 28px 32px; }
 
-    /* Cabeçalho */
-    .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #0D1B2A; }
-    .header-brand h1 { font-size: 20px; font-weight: 700; color: #0D1B2A; }
-    .header-brand p { font-size: 11px; color: #555; margin-top: 2px; }
-    .header-info { text-align: right; font-size: 10px; color: #555; line-height: 1.6; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #172033;
+      background: #ffffff;
+      padding: 26px 30px;
+    }
 
-    /* KPIs */
-    .kpis { display: flex; gap: 12px; margin-bottom: 24px; }
-    .kpi-box { flex: 1; background: #f0f4f8; border-radius: 6px; padding: 10px 14px; }
-    .kpi-box.destaque { background: #0D1B2A; color: #fff; }
-    .kpi-box label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 4px; }
-    .kpi-box strong { font-size: 14px; font-weight: 700; }
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #0D1B2A;
+    }
 
-    /* Seções */
-    h2 { font-size: 13px; font-weight: 700; color: #0D1B2A; margin: 20px 0 10px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-    h4 { font-size: 10px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.4px; margin: 12px 0 6px; }
+    .header-brand h1 {
+      font-size: 21px;
+      font-weight: 800;
+      color: #0D1B2A;
+      letter-spacing: -0.3px;
+    }
 
-    /* Tabelas */
-    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-    th { background: #0D1B2A; color: #fff; font-size: 9px; font-weight: 600; text-transform: uppercase; padding: 6px 8px; text-align: left; }
-    td { padding: 5px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:nth-child(even) td { background: #fafafa; }
-    .num { text-align: right; }
-    .total-cell { font-weight: 700; color: #0D1B2A; }
+    .header-brand p {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
 
-    /* Blocos de mês */
-    .mes-bloco { margin-bottom: 20px; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; page-break-inside: avoid; }
-    .mes-header { background: #f5f7fa; padding: 10px 14px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid #e0e0e0; }
-    .mes-titulo { font-size: 13px; font-weight: 700; color: #0D1B2A; }
-    .mes-meta { font-size: 10px; color: #555; }
-    .mes-bloco table { margin: 0; }
-    .mes-bloco h4 { margin: 10px 14px 4px; }
-    .mes-bloco table:last-child { margin-bottom: 0; }
+    .header-info {
+      text-align: right;
+      font-size: 10px;
+      color: #6b7280;
+      line-height: 1.7;
+    }
 
-    /* Rodapé */
-    .footer { margin-top: 28px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; font-size: 9px; color: #999; }
+    .kpis {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+      align-items: stretch;
+    }
+
+    .kpi-box {
+      flex: 1;
+      border: 1px solid #dfe5ec;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px 13px;
+      min-height: 72px;
+    }
+
+    .kpi-box.destaque {
+      background: #0D1B2A;
+      border-color: #0D1B2A;
+      color: #ffffff;
+    }
+
+    .kpi-box label {
+      display: block;
+      font-size: 8.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: inherit;
+      opacity: 0.68;
+      margin-bottom: 7px;
+      line-height: 1.2;
+    }
+
+    .kpi-box strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .intro {
+      background: #f8fafc;
+      border-left: 4px solid #0D1B2A;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #4b5563;
+      margin-bottom: 20px;
+      line-height: 1.45;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0D1B2A;
+      margin: 18px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    h4 {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      margin: 12px 14px 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #0D1B2A;
+      color: #fff;
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 7px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eef1f4;
+      vertical-align: middle;
+      color: #1f2937;
+    }
+
+    tr:nth-child(even) td {
+      background: #fbfcfd;
+    }
+
+    .num {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .total-cell {
+      font-weight: 800;
+      color: #0D1B2A;
+    }
+
+    .mes-bloco {
+      margin-bottom: 18px;
+      border: 1px solid #dde4ec;
+      border-radius: 12px;
+      overflow: hidden;
+      page-break-inside: avoid;
+      background: #ffffff;
+    }
+
+    .mes-topo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f3f6f9;
+      padding: 12px 14px;
+      border-bottom: 1px solid #dde4ec;
+    }
+
+    .mes-label {
+      font-size: 8px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 3px;
+      font-weight: 700;
+    }
+
+    .mes-titulo {
+      font-size: 15px;
+      color: #0D1B2A;
+      font-weight: 800;
+    }
+
+    .mes-desconto {
+      font-size: 10px;
+      color: #4b5563;
+    }
+
+    .mes-resumo {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-bottom: 1px solid #eef1f4;
+    }
+
+    .mes-resumo div {
+      padding: 10px 12px;
+      border-right: 1px solid #eef1f4;
+    }
+
+    .mes-resumo div:last-child {
+      border-right: 0;
+    }
+
+    .mes-resumo span {
+      display: block;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      color: #6b7280;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .mes-resumo strong {
+      font-size: 12px;
+      color: #111827;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mes-resumo .receber {
+      background: #f8fafc;
+    }
+
+    .mes-resumo .receber strong {
+      color: #0D1B2A;
+      font-size: 13px;
+    }
+
+    .table-section {
+      padding-bottom: 8px;
+    }
+
+    .table-section table {
+      margin: 0;
+    }
+
+    .mes-rodape {
+      padding: 8px 14px;
+      background: #fbfcfd;
+      border-top: 1px solid #eef1f4;
+      color: #6b7280;
+      font-size: 9px;
+      text-align: right;
+    }
+
+    .footer {
+      margin-top: 26px;
+      padding-top: 10px;
+      border-top: 1px solid #dde4ec;
+      text-align: center;
+      font-size: 9px;
+      color: #9ca3af;
+    }
 
     @media print {
-      body { padding: 0; }
-      .no-print { display: none !important; }
-      .mes-bloco { page-break-inside: avoid; }
+      body {
+        padding: 0;
+      }
+
+      .mes-bloco {
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
@@ -691,48 +972,39 @@ function gerarRelatorioHistorico() {
   <div class="header">
     <div class="header-brand">
       <h1>☀️ Solar Gestão</h1>
-      <p>Relatório completo do histórico de cobranças</p>
+      <p>Relatório profissional de produção, compensação e cobrança</p>
     </div>
     <div class="header-info">
       <div>Gerado em: ${dataGeracao}</div>
-      <div>Total de meses: ${totalMeses}</div>
+      <div>Meses analisados: ${totalMeses}</div>
     </div>
   </div>
 
   <div class="kpis">
     <div class="kpi-box">
-      <label>Total de meses</label>
-      <strong>${totalMeses}</strong>
+      <label>Produção injetada</label>
+      <strong>${formatKwh(totais.totalProducao)}</strong>
+    </div>
+    <div class="kpi-box">
+      <label>Total faturado</label>
+      <strong>${moeda(totais.totalFaturado)}</strong>
+    </div>
+    <div class="kpi-box">
+      <label>Desconto concedido</label>
+      <strong>${moeda(totais.totalDesconto)}</strong>
     </div>
     <div class="kpi-box destaque">
-      <label>Total acumulado a receber</label>
-      <strong>${moeda(totalAcumulado)}</strong>
-    </div>
-    <div class="kpi-box">
-      <label>Economia gerada aos inquilinos</label>
-      <strong>${moeda(totalEconomia)}</strong>
-    </div>
-    <div class="kpi-box">
-      <label>Média mensal a receber</label>
-      <strong>${moeda(totalAcumulado / totalMeses)}</strong>
+      <label>Total a receber</label>
+      <strong>${moeda(totais.totalReceber)}</strong>
     </div>
   </div>
 
-  <h2>Resumo por mês</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Mês</th>
-        <th class="num">A receber</th>
-        <th class="num">Economia gerada</th>
-        <th class="num">Desconto</th>
-        <th>Salvo em</th>
-      </tr>
-    </thead>
-    <tbody>${linhasResumo}</tbody>
-  </table>
+  <div class="intro">
+    Este relatório consolida todos os meses salvos no Solar Gestão, somando a produção injetada na rede, os valores compensados nas unidades, o desconto concedido aos inquilinos e o valor líquido a receber.
+  </div>
 
-  <h2>Detalhamento por mês</h2>
+  <h2>Detalhamento mês a mês</h2>
+
   ${detalhesMeses}
 
   <div class="footer">
@@ -745,12 +1017,13 @@ function gerarRelatorioHistorico() {
 </body>
 </html>`;
 
-  // Abre em nova aba e dispara o print
   const janela = window.open("", "_blank");
+
   if (!janela) {
     toast("Permita pop-ups para gerar o relatório.", "warn");
     return;
   }
+
   janela.document.write(html);
   janela.document.close();
 }

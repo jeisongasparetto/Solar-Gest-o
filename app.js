@@ -223,11 +223,12 @@ async function copiarTexto(texto) {
 
 // ===== COLETAR / APLICAR DADOS =====
 function coletarDados() {
-  const dados = {
-    mes:      valor("mes"),
-    desconto: valor("desconto"),
-    casas: []
-  };
+ const dados = {
+  mes: valor("mes"),
+  desconto: valor("desconto"),
+  qtdCasas: qtdCasas,
+  casas: []
+};
   for (let i = 1; i <= qtdCasas; i++) {
     dados.casas.push({
       casa:      valor("casa" + i),
@@ -293,7 +294,7 @@ function filtrarProducaoDoMes(mesHistorico) {
 }
 function salvarHistorico() {
   calcular();
-  salvarProducaoInjecao();
+  salvarProducaoInjecao(false);
 
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
 
@@ -1188,6 +1189,7 @@ function salvarProducaoInjecao(mostrarToast = true) {
   carregarProducaoInjecao();
   if (mostrarToast) {
   toast("✅ Produção salva com sucesso.");
+}
 }
 
 function adicionarLinhaProducao() {

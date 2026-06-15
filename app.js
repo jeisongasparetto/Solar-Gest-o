@@ -296,7 +296,13 @@ async function limparDados() {
   }
 
   localStorage.removeItem("solarGestaoDados");
+  localStorage.removeItem(STORAGE_PRODUCAO_INJECAO);
 
+if (window.usuarioAtual) {
+  await apagarProducaoFirebase();
+}
+
+carregarProducaoInjecao();
   qtdCasas = 4;
   document.getElementById("mes").value = "";
   document.getElementById("desconto").value = "10";
@@ -886,11 +892,6 @@ function exportarExcel() {
   const dataHoje = new Date().toLocaleDateString('pt-BR').split('/').join('-');
   XLSX.writeFile(wb,"solar_gestao_"+dataHoje+".xlsx");
   toast("📊 Excel exportado com sucesso!");
-}
-
-// ===== SERVICE WORKER =====
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
 // ===== PRODUÇÃO / INJEÇÃO =====

@@ -431,24 +431,64 @@ function editarHistorico(idx) {
   toast(`✏️ Editando "${item.mes}". Após alterar, clique em "Salvar no histórico".`);
 }
 
-function apagarItemHistorico(idx) {
+async function apagarItemHistorico(idx) {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
   const item = historico[idx];
+
   if (!item) return;
+
   if (!confirm(`Deseja apagar somente o histórico de "${item.mes}"?`)) return;
+
+  // Apaga no Firebase
+  if (window.usuarioAtual) {
+    try {
+      const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const uid = userPath();
+      const id = String(item.mes || item.id).replace(/[^a-zA-Z0-9\-_]/g, "_");
+
+      await deleteDoc(doc(window.db, "usuarios", uid, "historico", id));
+    } catch (e) {
+      console.error("Erro ao apagar no Firebase:", e);
+      toast("Erro ao apagar no Firebase. Veja o Console.", "error");
+      return;
+    }
+  }
+
+  // Apaga local
   historico.splice(idx, 1);
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico));
+
   if (historicoEditandoIndex === idx) historicoEditandoIndex = null;
+
   renderHistorico();
-  toast("🗑️ Histórico apagado.", "warn");
+  toast("🗑️ Histórico apagado do Firebase e do aparelho.", "warn");
 }
 
-function apagarHistorico() {
+async function apagarHistorico() {
   if (!confirm("Tem certeza que deseja apagar todo o histórico?")) return;
+
+  if (window.usuarioAtual) {
+    try {
+      const { collection, getDocs, deleteDoc, doc } =
+        await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+      const uid = userPath();
+      const snap = await getDocs(collection(window.db, "usuarios", uid, "historico"));
+
+      for (const d of snap.docs) {
+        await deleteDoc(doc(window.db, "usuarios", uid, "historico", d.id));
+      }
+    } catch (e) {
+      console.error("Erro ao apagar histórico no Firebase:", e);
+      toast("Erro ao apagar histórico no Firebase. Veja o Console.", "error");
+      return;
+    }
+  }
+
   localStorage.removeItem("solarGestaoHistorico");
   historicoEditandoIndex = null;
   renderHistorico();
-  toast("Histórico apagado.", "warn");
+  toast("Histórico apagado do Firebase e do aparelho.", "warn");
 }
 
 // ===== BACKUP =====

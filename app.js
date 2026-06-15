@@ -16,7 +16,7 @@ function toast(msg, type = "success", duration = 3000) {
 let qtdCasas = 4;
 let historicoEditandoIndex = null;
 let bloquearSalvarAutomatico = false;
-
+let timerSalvarFirebase = null;
 // ===== UTILITÁRIOS =====
 function moeda(valor) {
   const n = Number(valor) || 0;
@@ -260,11 +260,13 @@ function aplicarDados(dados) {
 function salvarAutomatico() {
   if (bloquearSalvarAutomatico) return;
 
-  localStorage.setItem("solarGestaoDados", JSON.stringify(coletarDados()));
+  localStorage.setItem(
+    "solarGestaoDados",
+    JSON.stringify(coletarDados())
+  );
 
-  if (window.usuarioAtual) {
-    salvarDadosFirebase();
-  }
+  salvarDadosFirebaseDebounce();
+}
 }
 
 function carregarDados() {
@@ -321,6 +323,15 @@ async function limparDados() {
   toast("🧹 Faturamento e produção limpos do Firebase e do aparelho.", "warn");
 }
 
+function salvarDadosFirebaseDebounce() {
+  clearTimeout(timerSalvarFirebase);
+
+  timerSalvarFirebase = setTimeout(() => {
+    if (window.usuarioAtual) {
+      salvarDadosFirebase();
+    }
+  }, 1000);
+}
 // ===== HISTÓRICO LOCAL =====
 function filtrarProducaoDoMes(mesHistorico) {
   const producao = JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]");

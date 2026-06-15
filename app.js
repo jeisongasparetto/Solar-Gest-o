@@ -267,7 +267,6 @@ function salvarAutomatico() {
 
   salvarDadosFirebaseDebounce();
 }
-}
 
 function carregarDados() {
   try {

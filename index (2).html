@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar Gestão</title>
+  <meta name="theme-color" content="#0D1B2A" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css?v=10" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="70" cy="25" r="13" fill="#FF8A00"/>
+          <path d="M16 62 C25 32 47 18 76 32" fill="none" stroke="#FFC107" stroke-width="7" stroke-linecap="round"/>
+          <path d="M24 62 L45 42 L66 62" fill="none" stroke="#0D1B2A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M33 62 H78 L66 82 H20 Z" fill="#1E88E5"/>
+          <path d="M43 63 L38 80 M57 63 L52 80 M72 63 L66 80 M31 72 H72" stroke="#EAF6FF" stroke-width="3"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Solar Gestão</h1>
+        <p>Controle de cobrança de energia solar para imóveis/usinas</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btnRelatorio" class="btn secondary small">📄 Relatório PDF</button>
+      <button id="btnExcel" class="btn secondary small">📊 Exportar Excel</button>
+      <button id="btnLogin" class="btn secondary small">☁️ Entrar com Google</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- PRODUÇÃO / INJEÇÃO NA REDE -->
+    <section class="panel" id="producao-injecao">
+      <div class="section-title">
+        <h2>Produção / Injeção na rede</h2>
+        <span>Informe quanto cada sistema injetou no mês.</span>
+      </div>
+      <div class="table-actions">
+        <button class="btn secondary small" type="button" onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
+      </div>
+      <div class="table-wrap">
+        <table class="solar-table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Inversor</th>
+              <th>Potência kWp</th>
+              <th>kWh Injetado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-producao-injecao"></tbody>
+        </table>
+      </div>
+      <div class="resumo-producao">
+        <p><strong>Total injetado:</strong> <span id="total-kwh-injetado">0</span> kWh</p>
+        <p><strong>Potência total:</strong> <span id="total-potencia-kwp">0</span> kWp</p>
+        <p><strong>Média:</strong> <span id="media-kwh-kwp">0</span> kWh/kWp</p>
+      </div>
+    </section>
+
+    <!-- FATURAMENTO -->
+    <section class="panel">
+      <div class="section-title">
+        <h2>Faturamento</h2>
+        <span>Digite somente os campos em branco. Os cálculos serão automáticos.</span>
+      </div>
+      <div class="config-grid" style="margin-bottom:16px;">
+        <label>
+          Mês de referência
+          <input id="mes" type="month" onclick="this.showPicker()" />
+        </label>
+        <label>
+          Desconto ao Cliente (%)
+          <input id="desconto" type="text" value="10" />
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table id="tabela">
+          <thead>
+            <tr>
+              <th>Endereço</th>
+              <th>Unidade consumidora</th>
+              <th>Cliente</th>
+              <th>Consumo da fatura (R$)</th>
+              <th>Valor injetado (R$)</th>
+              <th>Desconto</th>
+              <th>Economia</th>
+              <th>Valor total a pagar</th>
+              <th>WhatsApp</th>
+            </tr>
+          </thead>
+          <tbody id="casasTbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">Totais</td>
+              <td id="totalConsumoTabela">R$ 0,00</td>
+              <td id="totalInjetadoTabela">R$ 0,00</td>
+              <td id="totalDescontoTabela">R$ 0,00</td>
+              <td id="totalEconomiaTabela">R$ 0,00</td>
+              <td id="totalPagarTabela">R$ 0,00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="row-controls">
+        <button id="btnRemoverCasa" class="btn secondary small">− Remover casa</button>
+        <button id="btnAdicionarCasa" class="btn secondary small">+ Adicionar casa</button>
+      </div>
+      <div class="actions">
+        <button id="btnCalcular" class="btn secondary">Calcular agora</button>
+        <button id="btnLimpar" class="btn danger">Limpar</button>
+        <input id="fileImport" type="file" accept=".json" hidden />
+      </div>
+    </section>
+
+    <!-- FECHAMENTO DO MÊS -->
+    <section class="panel">
+      <div class="section-title">
+        <h2>Fechamento do mês</h2>
+        <span>Confira os valores e salve o faturamento com a produção no histórico.</span>
+      </div>
+      <div class="actions">
+        <button id="btnHistorico" class="btn">💾 Salvar mês no histórico</button>
+        <button id="btnTextoGeral" class="btn secondary">Gerar texto geral WhatsApp</button>
+      </div>
+    </section>
+
+    <!-- WHATSAPP -->
+    <section class="panel">
+      <div class="section-title">
+        <h2>Texto para WhatsApp</h2>
+        <span>Copie e envie ao cliente ou ao responsável.</span>
+      </div>
+      <textarea id="mensagem" placeholder="Clique em gerar texto geral ou em copiar na linha da casa."></textarea>
+      <div class="actions two">
+        <button id="btnCopiarTexto" class="btn">Copiar texto</button>
+        <button id="btnLimparTexto" class="btn danger">Limpar texto</button>
+      </div>
+    </section>
+
+    <!-- KPIs -->
+    <section class="kpi-grid">
+      <div class="kpi">
+        <span>Total das faturas</span>
+        <strong id="kpiConsumo">R$ 0,00</strong>
+      </div>
+      <div class="kpi">
+        <span>Total compensado</span>
+        <strong id="kpiInjetado">R$ 0,00</strong>
+      </div>
+      <div class="kpi primary">
+        <span>Total a receber</span>
+        <strong id="kpiReceber">R$ 0,00</strong>
+      </div>
+      <div class="kpi">
+        <span>Economia total</span>
+        <strong id="kpiEconomia">R$ 0,00</strong>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section class="panel">
+      <div class="section-title historico-header">
+        <div>
+          <h2>Histórico salvo neste aparelho</h2>
+          <span>Registro simples para acompanhar os meses.</span>
+        </div>
+        <button id="btnToggleHistorico" class="btn secondary small" type="button">▼</button>
+      </div>
+      <div id="historicoWrapper" style="display:none; margin-top:14px;">
+        <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+        <button id="btnBackup" class="btn secondary small">💾 Backup</button>
+        <button id="btnImportar" class="btn secondary small">📂 Restaurar Backup</button>
+        <div id="historico" class="history"></div>
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+          <button class="btn danger small" onclick="apagarHistorico()">🗑️ Apagar histórico</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAnalytics }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyDKmP0Jd_Cifi0TLaACgtO_ob6bDlACN9o",
+      authDomain:        "solar-gestao-516dc.firebaseapp.com",
+      projectId:         "solar-gestao-516dc",
+      storageBucket:     "solar-gestao-516dc.firebasestorage.app",
+      messagingSenderId: "935411546738",
+      appId:             "1:935411546738:web:59deaed5055bd7418da0eb",
+      measurementId:     "G-T0J2B1YFFK"
+    };
+
+    const app      = initializeApp(firebaseConfig);
+    window.db      = getFirestore(app);
+    window.auth    = getAuth(app);
+    window.provider = new GoogleAuthProvider();
+    getAnalytics(app);
+
+    onAuthStateChanged(window.auth, (user) => {
+      window.usuarioAtual = user;
+      const btn = document.getElementById("btnLogin");
+      if (btn) {
+        btn.textContent = user
+          ? `☁️ ${user.displayName.split(" ")[0]} (Sair)`
+          : "☁️ Entrar com Google";
+      }
+      if (user) {
+        carregarDadosFirebase();
+        renderHistoricoFirebase();
+        toast(`☁️ Olá, ${user.displayName.split(" ")[0]}! Dados sincronizados.`);
+      }
+    });
+  </script>
+
+  <script src="app.js?v=20"></script>
+</body>
+</html>

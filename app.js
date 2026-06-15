@@ -347,7 +347,81 @@ function salvarHistorico() {
     toast("Informe o mês de referência antes de salvar.", "warn");
     return;
   }
+function salvarProducaoNoHistorico() {
+  salvarProducaoInjecao(false, false);
 
+  const producao = JSON.parse(
+    localStorage.getItem(STORAGE_PRODUCAO_INJECAO) || "[]"
+  );
+
+  const historico = JSON.parse(
+    localStorage.getItem("solarGestaoHistorico") || "[]"
+  );
+
+  const producaoPorMes = {};
+
+  producao.forEach(item => {
+    if (!item.mes) return;
+
+    if (!producaoPorMes[item.mes]) {
+      producaoPorMes[item.mes] = [];
+    }
+
+    producaoPorMes[item.mes].push(item);
+  });
+
+  Object.keys(producaoPorMes).forEach(mes => {
+
+    const index = historico.findIndex(h => h.mes === mes);
+
+    if (index >= 0) {
+
+      historico[index].producao = producaoPorMes[mes];
+
+      historico[index].data =
+        new Date().toLocaleString("pt-BR") +
+        " — produção atualizada";
+
+      if (window.usuarioAtual) {
+        salvarHistoricoFirebase(historico[index]);
+      }
+
+    } else {
+
+      const novo = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        data: new Date().toLocaleString("pt-BR"),
+        mes,
+        desconto: "10",
+        receber: moeda(0),
+        receberNum: 0,
+        economia: moeda(0),
+        casas: [],
+        producao: producaoPorMes[mes],
+        dadosCompletos: null
+      };
+
+      historico.unshift(novo);
+
+      if (window.usuarioAtual) {
+        salvarHistoricoFirebase(novo);
+      }
+    }
+  });
+
+  historico.sort((a, b) =>
+    String(b.mes).localeCompare(String(a.mes))
+  );
+
+  localStorage.setItem(
+    "solarGestaoHistorico",
+    JSON.stringify(historico.slice(0, 36))
+  );
+
+  renderHistorico();
+
+  toast("⚡ Produção salva no histórico.");
+}
   calcular();
   salvarProducaoInjecao(false);
 
@@ -830,6 +904,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnCalcular").addEventListener("click", calcular);
   document.getElementById("btnHistorico").addEventListener("click", salvarHistorico);
+  document.getElementById("btnHistoricoProducao").addEventListener("click", salvarProducaoNoHistorico);
   document.getElementById("btnLimpar").addEventListener("click", limparDados);
   document.getElementById("btnBackup").addEventListener("click", baixarBackup);
   document.getElementById("btnImportar").addEventListener("click", () => document.getElementById("fileImport").click());

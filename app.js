@@ -15,6 +15,7 @@ function toast(msg, type = "success", duration = 3000) {
 // ===== ESTADO =====
 let qtdCasas = 4;
 let historicoEditandoIndex = null;
+let bloquearSalvarAutomatico = false;
 
 // ===== UTILITÁRIOS =====
 function moeda(valor) {
@@ -257,8 +258,13 @@ function aplicarDados(dados) {
 
 // ===== PERSISTÊNCIA LOCAL =====
 function salvarAutomatico() {
+  if (bloquearSalvarAutomatico) return;
+
   localStorage.setItem("solarGestaoDados", JSON.stringify(coletarDados()));
-  if (window.usuarioAtual) salvarDadosFirebase();
+
+  if (window.usuarioAtual) {
+    salvarDadosFirebase();
+  }
 }
 
 function carregarDados() {
@@ -278,7 +284,9 @@ function carregarDados() {
 }
 
 async function limparDados() {
-  if (!confirm("Deseja limpar todos os campos?")) return;
+  if (!confirm("Deseja limpar todos os campos e a produção/injeção?")) return;
+
+  bloquearSalvarAutomatico = true;
 
   if (window.usuarioAtual) {
     try {
@@ -288,7 +296,9 @@ async function limparDados() {
       const uid = userPath();
 
       await deleteDoc(doc(window.db, "usuarios", uid, "app", "dados"));
+      await apagarProducaoFirebase();
     } catch (e) {
+      bloquearSalvarAutomatico = false;
       console.error("Erro ao limpar dados no Firebase:", e);
       toast("Erro ao limpar dados no Firebase. Veja o Console.", "error");
       return;
@@ -298,19 +308,17 @@ async function limparDados() {
   localStorage.removeItem("solarGestaoDados");
   localStorage.removeItem(STORAGE_PRODUCAO_INJECAO);
 
-if (window.usuarioAtual) {
-  await apagarProducaoFirebase();
-}
-
-carregarProducaoInjecao();
   qtdCasas = 4;
   document.getElementById("mes").value = "";
   document.getElementById("desconto").value = "10";
 
   renderLinhas();
+  carregarProducaoInjecao();
   calcular();
 
-  toast("🧹 Faturamento limpo do Firebase e do aparelho.", "warn");
+  bloquearSalvarAutomatico = false;
+
+  toast("🧹 Faturamento e produção limpos do Firebase e do aparelho.", "warn");
 }
 
 // ===== HISTÓRICO LOCAL =====
@@ -951,15 +959,34 @@ function salvarProducaoInjecao(mostrarToast = true) {
 
 function adicionarLinhaProducao() {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-  dados.push({ mes: valor("mes") || "", inversor: "", potenciaKwp: "", kwhInjetado: "" });
+
+  dados.push({
+    mes: valor("mes") || "",
+    inversor: "",
+    potenciaKwp: "",
+    kwhInjetado: ""
+  });
+
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  if (window.usuarioAtual) {
+    salvarProducaoFirebase(dados);
+  }
+
   carregarProducaoInjecao();
 }
 
 function removerLinhaProducao(index) {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
+
   dados.splice(index, 1);
+
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  if (window.usuarioAtual) {
+    salvarProducaoFirebase(dados);
+  }
+
   carregarProducaoInjecao();
 }
 

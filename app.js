@@ -277,10 +277,34 @@ function carregarDados() {
   }
 }
 
-function limparDados() {
+async function limparDados() {
   if (!confirm("Deseja limpar todos os campos?")) return;
+
+  if (window.usuarioAtual) {
+    try {
+      const { doc, deleteDoc } =
+        await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+      const uid = userPath();
+
+      await deleteDoc(doc(window.db, "usuarios", uid, "app", "dados"));
+    } catch (e) {
+      console.error("Erro ao limpar dados no Firebase:", e);
+      toast("Erro ao limpar dados no Firebase. Veja o Console.", "error");
+      return;
+    }
+  }
+
   localStorage.removeItem("solarGestaoDados");
-  location.reload();
+
+  qtdCasas = 4;
+  document.getElementById("mes").value = "";
+  document.getElementById("desconto").value = "10";
+
+  renderLinhas();
+  calcular();
+
+  toast("🧹 Faturamento limpo do Firebase e do aparelho.", "warn");
 }
 
 // ===== HISTÓRICO LOCAL =====

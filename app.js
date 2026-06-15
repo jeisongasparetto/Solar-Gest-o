@@ -45,6 +45,17 @@ function setText(id, text) {
   if (el) el.textContent = text;
 }
 
+function formatarMes(mesBruto) {
+  if (!mesBruto || !mesBruto.includes("-")) return "mês não informado";
+  const [ano, numeroMes] = mesBruto.split("-");
+  const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril",
+    "Maio", "Junho", "Julho", "Agosto",
+    "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  return `${meses[Number(numeroMes) - 1]}/${ano}`;
+}
+
 // ===== LINHAS DA TABELA =====
 function criarLinha(i) {
   const tr = document.createElement("tr");
@@ -94,12 +105,13 @@ function adicionarCasa() {
 
 function removerCasa() {
   if (qtdCasas <= 1) { toast("Mínimo de 1 casa.", "warn"); return; }
+  const removed = qtdCasas;
   const tbody = document.getElementById("casasTbody");
   const rows = tbody.querySelectorAll("tr");
   if (rows.length) tbody.removeChild(rows[rows.length - 1]);
   qtdCasas--;
   calcular();
-  toast("Casa " + (qtdCasas + 1) + " removida.");
+  toast("Casa " + removed + " removida.");
 }
 
 // ===== CÁLCULO =====
@@ -161,21 +173,7 @@ function dadosCasa(i) {
 // ===== MENSAGENS WHATSAPP =====
 function gerarMensagemCasa(i) {
   calcular();
-
-  const mesBruto = valor("mes") || "";
-  let mes = "mês não informado";
-
-  if (mesBruto.includes("-")) {
-    const [ano, numeroMes] = mesBruto.split("-");
-    const meses = [
-      "Janeiro", "Fevereiro", "Março", "Abril",
-      "Maio", "Junho", "Julho", "Agosto",
-      "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
-
-    mes = `${meses[Number(numeroMes) - 1]}/${ano}`;
-  }
-
+  const mes = formatarMes(valor("mes"));
   const d = dadosCasa(i);
   const nome = d.inquilino ? d.inquilino : d.casa;
 
@@ -193,46 +191,17 @@ Desconto concedido: ${moeda(d.economia)}
 
 function gerarMensagemGeral() {
   calcular();
-  const mesBruto = valor("mes") || "";
-
-let mes = "mês não informado";
-
-if (mesBruto.includes("-")) {
-  const [ano, numeroMes] = mesBruto.split("-");
-
-  const meses = [
-    "Janeiro", "Fevereiro", "Março", "Abril",
-    "Maio", "Junho", "Julho", "Agosto",
-    "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-
-  mes = `${meses[Number(numeroMes) - 1]}/${ano}`;
-}
+  const mes  = formatarMes(valor("mes"));
   const desc = valor("desconto") || "10";
-  let msg = `☀️ RESUMO ENERGIA SOLAR – ${mes}
-Desconto aplicado: ${desc}%
-
-`;
+  let msg = `☀️ RESUMO ENERGIA SOLAR – ${mes}\nDesconto aplicado: ${desc}%\n\n`;
 
   for (let i = 1; i <= qtdCasas; i++) {
     const d    = dadosCasa(i);
     const nome = d.inquilino ? d.inquilino : d.casa;
-    msg += `Imóvel: ${nome.toUpperCase()}
-UC: ${d.uc}
-Consumo da fatura: ${moeda(d.consumo)}
-Compensado pelo solar: ${moeda(d.injetado)}
-Desconto concedido: ${moeda(d.economia)}
-✅ Valor a pagar no aluguel: ${moeda(d.pagar)}
-
-`;
+    msg += `Imóvel: ${nome.toUpperCase()}\nUC: ${d.uc}\nConsumo da fatura: ${moeda(d.consumo)}\nCompensado pelo solar: ${moeda(d.injetado)}\nDesconto concedido: ${moeda(d.economia)}\n✅ Valor a pagar no aluguel: ${moeda(d.pagar)}\n\n`;
   }
 
- msg += `
-━━━━━━━━━━━━━━
-
-💰 TOTAL A RECEBER: ${document.getElementById("kpiReceber").textContent}
-🎁 DESCONTO TOTAL CONCEDIDO: ${document.getElementById("kpiEconomia").textContent}`;
-
+  msg += `\n━━━━━━━━━━━━━━\n\n💰 TOTAL A RECEBER: ${document.getElementById("kpiReceber").textContent}\n🎁 DESCONTO TOTAL CONCEDIDO: ${document.getElementById("kpiEconomia").textContent}`;
   document.getElementById("mensagem").value = msg;
 }
 
@@ -244,9 +213,11 @@ async function copiarTexto(texto) {
   area.select();
 
   let ok = false;
-  try { ok = document.execCommand("copy"); } catch (e) {}
   if (navigator.clipboard && window.isSecureContext) {
     try { await navigator.clipboard.writeText(texto); ok = true; } catch (e) {}
+  }
+  if (!ok) {
+    try { ok = document.execCommand("copy"); } catch (e) {}
   }
 
   toast(ok ? "✅ Texto copiado!" : "⚠️ Selecione o texto e copie manualmente.", ok ? "success" : "warn");
@@ -254,12 +225,13 @@ async function copiarTexto(texto) {
 
 // ===== COLETAR / APLICAR DADOS =====
 function coletarDados() {
- const dados = {
-  mes: valor("mes"),
-  desconto: valor("desconto"),
-  qtdCasas: qtdCasas,
-  casas: []
-};
+  const dados = {
+    version: 1,
+    mes: valor("mes"),
+    desconto: valor("desconto"),
+    qtdCasas: qtdCasas,
+    casas: []
+  };
   for (let i = 1; i <= qtdCasas; i++) {
     dados.casas.push({
       casa:      valor("casa" + i),
@@ -276,23 +248,17 @@ function aplicarDados(dados) {
   if (!dados) return;
   document.getElementById("mes").value      = dados.mes      || "";
   document.getElementById("desconto").value = dados.desconto || "10";
-
   if (dados.qtdCasas && dados.qtdCasas !== qtdCasas) {
     qtdCasas = Number(dados.qtdCasas) || 4;
   }
-
   renderLinhas(dados.casas);
   calcular();
 }
 
-// ===== PERSISTÊNCIA =====
+// ===== PERSISTÊNCIA LOCAL =====
 function salvarAutomatico() {
   localStorage.setItem("solarGestaoDados", JSON.stringify(coletarDados()));
-}
-
-function salvarDados() {
-  salvarAutomatico();
-  toast("💾 Dados salvos neste aparelho.");
+  if (window.usuarioAtual) salvarDadosFirebase();
 }
 
 function carregarDados() {
@@ -317,37 +283,35 @@ function limparDados() {
   location.reload();
 }
 
-// ===== HISTÓRICO =====
+// ===== HISTÓRICO LOCAL =====
 function filtrarProducaoDoMes(mesHistorico) {
   const producao = JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]");
-
   return producao.filter(p => p.mes === mesHistorico);
 }
+
 function salvarHistorico() {
+  if (!valor("mes")) {
+    toast("Informe o mês de referência antes de salvar.", "warn");
+    return;
+  }
+
   calcular();
   salvarProducaoInjecao(false);
 
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
-
   const percentual = numero("desconto") / 100;
   let totalPagarNum = 0;
   const casas = [];
 
   for (let i = 1; i <= qtdCasas; i++) {
     const d = dadosCasa(i);
-
     if (d.consumo > 0 || d.injetado > 0) {
       totalPagarNum += d.pagar;
-
-      casas.push({
-        nome: d.inquilino ? d.inquilino : d.casa,
-        pagar: d.pagar
-      });
+      casas.push({ nome: d.inquilino ? d.inquilino : d.casa, pagar: d.pagar });
     }
   }
 
-  const mesAtual = valor("mes") || "sem mês";
-
+  const mesAtual = valor("mes");
   const registro = {
     id: Date.now(),
     data: new Date().toLocaleString("pt-BR"),
@@ -363,25 +327,21 @@ function salvarHistorico() {
 
   if (historicoEditandoIndex !== null && historico[historicoEditandoIndex]) {
     const idAntigo = historico[historicoEditandoIndex].id;
-
     historico[historicoEditandoIndex] = {
       ...registro,
       id: idAntigo,
       data: new Date().toLocaleString("pt-BR") + " — alterado"
     };
-
     historicoEditandoIndex = null;
     toast("✅ Histórico alterado com sucesso.");
   } else {
     const indexMesmoMes = historico.findIndex(item => item.mes === mesAtual);
-
     if (indexMesmoMes >= 0) {
       historico[indexMesmoMes] = {
         ...registro,
         id: historico[indexMesmoMes].id,
         data: new Date().toLocaleString("pt-BR") + " — atualizado"
       };
-
       toast("🔄 Histórico do mês atualizado.");
     } else {
       historico.unshift(registro);
@@ -390,6 +350,10 @@ function salvarHistorico() {
   }
 
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));
+
+  // Sincroniza com Firebase se logado
+  if (window.usuarioAtual) salvarHistoricoFirebase(registro);
+
   renderHistorico();
 }
 
@@ -414,7 +378,7 @@ function renderHistorico() {
   html += historico.map((item, idx) => {
     const casasHtml = (item.casas && item.casas.length)
       ? `<div class="historico-casas">${item.casas.map(c =>
-          `<div class="historico-casa">🏠 ${c.nome}: <strong>${moeda(c.pagar)}</strong></div>`
+          `<div class="historico-casa">🏠 ${escapeHtml(c.nome)}: <strong>${moeda(c.pagar)}</strong></div>`
         ).join("")}</div>`
       : "";
 
@@ -422,7 +386,7 @@ function renderHistorico() {
       ? `<div class="historico-casas" style="margin-top:8px;">
           <strong>Produção / Injeção:</strong>
           ${item.producao.map(p =>
-            `<div class="historico-casa">⚡ ${p.inversor}: <strong>${p.kwhInjetado} kWh</strong> | ${p.potenciaKwp} kWp</div>`
+            `<div class="historico-casa">⚡ ${escapeHtml(p.inversor)}: <strong>${p.kwhInjetado} kWh</strong> | ${p.potenciaKwp} kWp</div>`
           ).join("")}
         </div>`
       : "";
@@ -430,7 +394,7 @@ function renderHistorico() {
     return `
       <div class="history-item">
         <div class="history-item-header">
-          <strong>${item.mes}</strong>
+          <strong>${escapeHtml(item.mes)}</strong>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn secondary small" onclick="editarHistorico(${idx})">✏️ Editar</button>
             <button class="btn danger small" onclick="apagarItemHistorico(${idx})">🗑️ Apagar</button>
@@ -448,20 +412,21 @@ function renderHistorico() {
   area.innerHTML = html;
 }
 
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function editarHistorico(idx) {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
   const item = historico[idx];
-
-  if (!item || !item.dadosCompletos) {
-    toast("Dados completos não disponíveis.", "warn");
-    return;
-  }
-
+  if (!item || !item.dadosCompletos) { toast("Dados completos não disponíveis.", "warn"); return; }
   if (!confirm(`Carregar dados de "${item.mes}" para edição?`)) return;
-
   historicoEditandoIndex = idx;
   aplicarDados(item.dadosCompletos);
-
   window.scrollTo({ top: 0, behavior: "smooth" });
   toast(`✏️ Editando "${item.mes}". Após alterar, clique em "Salvar no histórico".`);
 }
@@ -469,15 +434,11 @@ function editarHistorico(idx) {
 function apagarItemHistorico(idx) {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
   const item = historico[idx];
-
   if (!item) return;
   if (!confirm(`Deseja apagar somente o histórico de "${item.mes}"?`)) return;
-
   historico.splice(idx, 1);
   localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico));
-
   if (historicoEditandoIndex === idx) historicoEditandoIndex = null;
-
   renderHistorico();
   toast("🗑️ Histórico apagado.", "warn");
 }
@@ -497,7 +458,6 @@ function baixarBackup() {
     historico: JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]"),
     producao: JSON.parse(localStorage.getItem("producaoInjecaoSolar") || "[]")
   };
-
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
@@ -523,9 +483,9 @@ function importarBackup(file) {
         renderHistorico();
       }
       if (backup.producao) {
-  localStorage.setItem("producaoInjecaoSolar", JSON.stringify(backup.producao));
-  carregarProducaoInjecao();
-}
+        localStorage.setItem("producaoInjecaoSolar", JSON.stringify(backup.producao));
+        carregarProducaoInjecao();
+      }
       toast("⬆ Backup importado com sucesso.");
     } catch (err) {
       toast("Arquivo inválido.", "error");
@@ -534,24 +494,96 @@ function importarBackup(file) {
   reader.readAsText(file);
 }
 
-// ===== RELATÓRIO HISTÓRICO (PDF) =====
-function gerarRelatorioHistorico() {
-  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
-
-  if (!historico.length) {
-    toast("Nenhum histórico salvo para gerar relatório.", "warn");
+// ===== FIREBASE AUTH =====
+async function loginGoogle() {
+  if (window.usuarioAtual) {
+    if (!confirm("Deseja sair da conta Google?")) return;
+    try {
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+      await signOut(window.auth);
+      toast("Sessão encerrada.", "warn");
+    } catch (e) {
+      toast("Erro ao sair.", "error");
+    }
     return;
   }
+  try {
+    const { signInWithPopup } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    await signInWithPopup(window.auth, window.provider);
+  } catch (e) {
+    toast("Erro ao fazer login. Verifique se pop-ups estão permitidos.", "error");
+  }
+}
+
+// ===== FIREBASE FIRESTORE =====
+function userPath() {
+  return window.usuarioAtual?.uid || null;
+}
+
+async function salvarDadosFirebase() {
+  const uid = userPath();
+  if (!uid) return;
+  try {
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(window.db, "usuarios", uid, "app", "dados"), coletarDados());
+  } catch (e) {
+    console.error("Erro ao salvar no Firebase:", e);
+  }
+}
+
+async function carregarDadosFirebase() {
+  const uid = userPath();
+  if (!uid) return;
+  try {
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const snap = await getDoc(doc(window.db, "usuarios", uid, "app", "dados"));
+    if (snap.exists()) {
+      const dados = snap.data();
+      localStorage.setItem("solarGestaoDados", JSON.stringify(dados));
+      aplicarDados(dados);
+    }
+  } catch (e) {
+    console.error("Erro ao carregar do Firebase:", e);
+  }
+}
+
+async function salvarHistoricoFirebase(registro) {
+  const uid = userPath();
+  if (!uid) return;
+  try {
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const id = String(registro.mes || registro.id).replace(/[^a-zA-Z0-9\-_]/g, "_");
+    await setDoc(doc(window.db, "usuarios", uid, "historico", id), registro);
+  } catch (e) {
+    console.error("Erro ao salvar histórico no Firebase:", e);
+  }
+}
+
+async function renderHistoricoFirebase() {
+  const uid = userPath();
+  if (!uid) return;
+  try {
+    const { collection, getDocs, query, orderBy } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const snap = await getDocs(query(collection(window.db, "usuarios", uid, "historico")));
+    const historico = [];
+    snap.forEach(d => historico.push(d.data()));
+    historico.sort((a, b) => String(b.mes).localeCompare(String(a.mes)));
+    localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico));
+    renderHistorico();
+  } catch (e) {
+    console.error("Erro ao carregar histórico do Firebase:", e);
+  }
+}
+
+// ===== RELATÓRIO PDF =====
+function gerarRelatorioHistorico() {
+  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+  if (!historico.length) { toast("Nenhum histórico salvo para gerar relatório.", "warn"); return; }
 
   const historicoOrdenado = [...historico].reverse();
-
   const parseNum = v => parseFloat(String(v || "0").replace(/\./g, "").replace(",", ".")) || 0;
-
-  const formatKwh = v => {
-    const n = Number(v) || 0;
-    return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " kWh";
-  };
-
+  const formatKwh = v => { const n = Number(v) || 0; return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " kWh"; };
   const mesBonito = mes => {
     if (!mes || !mes.includes("-")) return mes || "Sem mês";
     const [ano, m] = mes.split("-");
@@ -561,504 +593,63 @@ function gerarRelatorioHistorico() {
 
   const totais = historico.reduce((acc, item) => {
     const desc = parseFloat(item.desconto || "10") / 100;
-
-    let brutoMes = 0;
-    let descontoMes = 0;
-
+    let brutoMes = 0, descontoMes = 0;
     (item.dadosCompletos?.casas || []).forEach(c => {
       const inj = parseNum(c.injetado);
       brutoMes += inj;
       descontoMes += inj * desc;
     });
-
-    const producaoMes = (item.producao || []).reduce((s, p) => {
-      return s + (Number(p.kwhInjetado) || 0);
-    }, 0);
-
+    const producaoMes = (item.producao || []).reduce((s, p) => s + (Number(p.kwhInjetado) || 0), 0);
     acc.totalFaturado += brutoMes;
     acc.totalDesconto += descontoMes;
-    acc.totalReceber += item.receberNum || (brutoMes - descontoMes);
+    acc.totalReceber  += item.receberNum || (brutoMes - descontoMes);
     acc.totalProducao += producaoMes;
-
     return acc;
-  }, {
-    totalFaturado: 0,
-    totalDesconto: 0,
-    totalReceber: 0,
-    totalProducao: 0
-  });
+  }, { totalFaturado: 0, totalDesconto: 0, totalReceber: 0, totalProducao: 0 });
 
-  const totalMeses = historico.length;
-
-  const dataGeracao = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit", month: "long", year: "numeric"
-  });
+  const dataGeracao = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   const detalhesMeses = historicoOrdenado.map(item => {
     const descPerc = parseFloat(item.desconto || "10") / 100;
-
-    let totalFaturadoMes = 0;
-    let totalDescontoMes = 0;
-    let totalReceberMes = 0;
+    let totalFaturadoMes = 0, totalDescontoMes = 0, totalReceberMes = 0;
 
     const linhasCasas = (item.dadosCompletos?.casas || item.casas || []).map((c, idx) => {
       if (item.dadosCompletos?.casas) {
         const casa = item.dadosCompletos.casas[idx];
         if (!casa) return "";
-
         const inj = parseNum(casa.injetado);
         const cons = parseNum(casa.consumo);
         const desconto = inj * descPerc;
         const pagar = inj - desconto;
         const nome = casa.inquilino || casa.casa || ("Casa " + (idx + 1));
-
         if (inj === 0 && cons === 0) return "";
-
         totalFaturadoMes += inj;
         totalDescontoMes += desconto;
-        totalReceberMes += pagar;
-
-        return `
-          <tr>
-            <td>${nome}</td>
-            <td>${casa.uc || "—"}</td>
-            <td class="num">${moeda(cons)}</td>
-            <td class="num">${moeda(inj)}</td>
-            <td class="num">${moeda(desconto)}</td>
-            <td class="num total-cell">${moeda(pagar)}</td>
-          </tr>`;
+        totalReceberMes  += pagar;
+        return `<tr><td>${nome}</td><td>${casa.uc || "—"}</td><td class="num">${moeda(cons)}</td><td class="num">${moeda(inj)}</td><td class="num">${moeda(desconto)}</td><td class="num total-cell">${moeda(pagar)}</td></tr>`;
       }
-
       totalReceberMes += Number(c.pagar) || 0;
-
-      return `
-        <tr>
-          <td>${c.nome || "—"}</td>
-          <td>—</td>
-          <td class="num">—</td>
-          <td class="num">—</td>
-          <td class="num">—</td>
-          <td class="num total-cell">${moeda(c.pagar)}</td>
-        </tr>`;
+      return `<tr><td>${c.nome || "—"}</td><td>—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num total-cell">${moeda(c.pagar)}</td></tr>`;
     }).filter(Boolean).join("");
 
     const totalProducaoMes = (item.producao || []).reduce((s, p) => s + (Number(p.kwhInjetado) || 0), 0);
-
     const linhasProducao = (item.producao || []).map(p => {
       const kwh = Number(p.kwhInjetado) || 0;
       const kwp = Number(p.potenciaKwp) || 0;
       const participacao = totalProducaoMes > 0 ? ((kwh / totalProducaoMes) * 100).toFixed(1) : "0.0";
-
-      return `
-        <tr>
-          <td>${p.inversor || "—"}</td>
-          <td class="num">${kwp.toFixed(2)} kWp</td>
-          <td class="num">${formatKwh(kwh)}</td>
-          <td class="num">${kwp > 0 ? (kwh / kwp).toFixed(1) : "—"} kWh/kWp</td>
-          <td class="num">${participacao}%</td>
-        </tr>`;
+      return `<tr><td>${p.inversor || "—"}</td><td class="num">${kwp.toFixed(2)} kWp</td><td class="num">${formatKwh(kwh)}</td><td class="num">${kwp > 0 ? (kwh / kwp).toFixed(1) : "—"} kWh/kWp</td><td class="num">${participacao}%</td></tr>`;
     }).join("");
 
-    const tabelaCasas = linhasCasas ? `
-      <div class="table-section">
-        <h4>Imóveis / Inquilinos</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Imóvel / Inquilino</th>
-              <th>UC</th>
-              <th class="num">Fatura</th>
-              <th class="num">Compensado</th>
-              <th class="num">Desconto</th>
-              <th class="num">A receber</th>
-            </tr>
-          </thead>
-          <tbody>${linhasCasas}</tbody>
-        </table>
-      </div>` : "";
+    const tabelaCasas = linhasCasas ? `<div class="table-section"><h4>Imóveis / Inquilinos</h4><table><thead><tr><th>Imóvel / Inquilino</th><th>UC</th><th class="num">Fatura</th><th class="num">Compensado</th><th class="num">Desconto</th><th class="num">A receber</th></tr></thead><tbody>${linhasCasas}</tbody></table></div>` : "";
+    const tabelaProducao = linhasProducao ? `<div class="table-section"><h4>Produção / Injeção na rede</h4><table><thead><tr><th>Inversor</th><th class="num">Potência</th><th class="num">kWh injetado</th><th class="num">Média</th><th class="num">% do mês</th></tr></thead><tbody>${linhasProducao}</tbody></table></div>` : "";
 
-    const tabelaProducao = linhasProducao ? `
-      <div class="table-section">
-        <h4>Produção / Injeção na rede</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Inversor</th>
-              <th class="num">Potência</th>
-              <th class="num">kWh injetado</th>
-              <th class="num">Média</th>
-              <th class="num">% do mês</th>
-            </tr>
-          </thead>
-          <tbody>${linhasProducao}</tbody>
-        </table>
-      </div>` : "";
-
-    return `
-      <div class="mes-bloco">
-        <div class="mes-topo">
-          <div>
-            <div class="mes-label">Detalhamento mensal</div>
-            <div class="mes-titulo">${mesBonito(item.mes)}</div>
-          </div>
-          <div class="mes-desconto">Desconto aplicado: <strong>${item.desconto || "10"}%</strong></div>
-        </div>
-
-        <div class="mes-resumo">
-          <div>
-            <span>Produção injetada</span>
-            <strong>${formatKwh(totalProducaoMes)}</strong>
-          </div>
-          <div>
-            <span>Total faturado</span>
-            <strong>${moeda(totalFaturadoMes)}</strong>
-          </div>
-          <div>
-            <span>Desconto concedido</span>
-            <strong>${moeda(totalDescontoMes)}</strong>
-          </div>
-          <div class="receber">
-            <span>Total a receber</span>
-            <strong>${moeda(totalReceberMes || item.receberNum || 0)}</strong>
-          </div>
-        </div>
-
-        ${tabelaCasas}
-        ${tabelaProducao}
-
-        <div class="mes-rodape">
-          Salvo em: ${item.data || "—"}
-        </div>
-      </div>`;
+    return `<div class="mes-bloco"><div class="mes-topo"><div><div class="mes-label">Detalhamento mensal</div><div class="mes-titulo">${mesBonito(item.mes)}</div></div><div class="mes-desconto">Desconto aplicado: <strong>${item.desconto || "10"}%</strong></div></div><div class="mes-resumo"><div><span>Produção injetada</span><strong>${formatKwh(totalProducaoMes)}</strong></div><div><span>Total faturado</span><strong>${moeda(totalFaturadoMes)}</strong></div><div><span>Desconto concedido</span><strong>${moeda(totalDescontoMes)}</strong></div><div class="receber"><span>Total a receber</span><strong>${moeda(totalReceberMes || item.receberNum || 0)}</strong></div></div>${tabelaCasas}${tabelaProducao}<div class="mes-rodape">Salvo em: ${item.data || "—"}</div></div>`;
   }).join("");
 
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Relatório Solar Gestão</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      color: #172033;
-      background: #F4F7FA;
-      padding: 26px 30px;
-    }
-
-    .header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
-      border-bottom: 2px solid #0D1B2A;
-    }
-
-    .header-brand h1 {
-      font-size: 21px;
-      font-weight: 800;
-      color: #0D1B2A;
-      letter-spacing: -0.3px;
-    }
-
-    .header-brand p {
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 3px;
-    }
-
-    .header-info {
-      text-align: right;
-      font-size: 10px;
-      color: #6b7280;
-      line-height: 1.7;
-    }
-
-    .kpis {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 22px;
-      align-items: stretch;
-    }
-
-  .kpi-box {
-  flex: 1;
-  border: 1px solid #D8E3EC;
-  background: #FFFFFF;
-  border-radius: 10px;
-  padding: 12px 13px;
-  min-height: 72px;
-  box-shadow: 0 2px 8px rgba(13,27,42,0.08);
-}
-
-    .kpi-box.destaque {
-  background: linear-gradient(135deg,#0D1B2A,#1B5E20);
-  border-color: #1B5E20;
-  color: #ffffff;
-}
-
-    .kpi-box label {
-      display: block;
-      font-size: 8.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.55px;
-      color: inherit;
-      opacity: 0.68;
-      margin-bottom: 7px;
-      line-height: 1.2;
-    }
-
-    .kpi-box strong {
-      display: block;
-      font-size: 15px;
-      font-weight: 800;
-      line-height: 1.15;
-      white-space: nowrap;
-    }
-
-    .intro {
-      background: #EEF7FF;
-      border-left: 4px solid #1B5E20;
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: #4b5563;
-      margin-bottom: 20px;
-      line-height: 1.45;
-    }
-
-    h2 {
-      font-size: 13px;
-      font-weight: 800;
-      color: #0D1B2A;
-      margin: 18px 0 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    h4 {
-      font-size: 9.5px;
-      font-weight: 800;
-      color: #374151;
-      text-transform: uppercase;
-      letter-spacing: 0.45px;
-      margin: 12px 14px 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-  background: #12324A;
-      color: #fff;
-      font-size: 8.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 7px 8px;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #eef1f4;
-      vertical-align: middle;
-      color: #1f2937;
-    }
-
-    tr:nth-child(even) td {
-      background: #fbfcfd;
-    }
-
-    .num {
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .total-cell {
-      font-weight: 800;
-      color: #0D1B2A;
-    }
-
-  .mes-bloco {
-  margin-bottom: 18px;
-  border: 1px solid #D6E4F0;
-  border-radius: 12px;
-  overflow: hidden;
-  page-break-inside: avoid;
-  background: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(13,27,42,0.06);
-}
-
-    .mes-topo {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-     background: linear-gradient(90deg,#EAF4FF,#F2FFF6);
-      padding: 12px 14px;
-      border-bottom: 1px solid #dde4ec;
-    }
-
-    .mes-label {
-      font-size: 8px;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 3px;
-      font-weight: 700;
-    }
-
-    .mes-titulo {
-      font-size: 15px;
-      color: #0D1B2A;
-      font-weight: 800;
-    }
-
-    .mes-desconto {
-      font-size: 10px;
-      color: #4b5563;
-    }
-
-    .mes-resumo {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      border-bottom: 1px solid #eef1f4;
-    }
-
-    .mes-resumo div {
-      padding: 10px 12px;
-      border-right: 1px solid #eef1f4;
-    }
-
-    .mes-resumo div:last-child {
-      border-right: 0;
-    }
-
-    .mes-resumo span {
-      display: block;
-      font-size: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.45px;
-      color: #6b7280;
-      margin-bottom: 4px;
-      font-weight: 700;
-    }
-
-    .mes-resumo strong {
-      font-size: 12px;
-      color: #111827;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-  .mes-resumo .receber {
-  background: #EAF7EF;
-}
-
-    .mes-resumo .receber strong {
-      color: #0D1B2A;
-      font-size: 13px;
-    }
-
-    .table-section {
-      padding-bottom: 8px;
-    }
-
-    .table-section table {
-      margin: 0;
-    }
-
-    .mes-rodape {
-      padding: 8px 14px;
-      background: #fbfcfd;
-      border-top: 1px solid #eef1f4;
-      color: #6b7280;
-      font-size: 9px;
-      text-align: right;
-    }
-
-    .footer {
-      margin-top: 26px;
-      padding-top: 10px;
-      border-top: 1px solid #dde4ec;
-      text-align: center;
-      font-size: 9px;
-      color: #9ca3af;
-    }
-
-    @media print {
-      body {
-        padding: 0;
-      }
-
-      .mes-bloco {
-        page-break-inside: avoid;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="header">
-    <div class="header-brand">
-      <h1>☀️ Solar Gestão</h1>
-      <p>Relatório profissional de produção, compensação e cobrança</p>
-    </div>
-    <div class="header-info">
-      <div>Gerado em: ${dataGeracao}</div>
-      <div>Meses analisados: ${totalMeses}</div>
-    </div>
-  </div>
-
-  <div class="kpis">
-    <div class="kpi-box">
-      <label>Produção injetada</label>
-      <strong>${formatKwh(totais.totalProducao)}</strong>
-    </div>
-    <div class="kpi-box">
-      <label>Total faturado</label>
-      <strong>${moeda(totais.totalFaturado)}</strong>
-    </div>
-    <div class="kpi-box">
-      <label>Desconto concedido</label>
-      <strong>${moeda(totais.totalDesconto)}</strong>
-    </div>
-    <div class="kpi-box destaque">
-      <label>Total a receber</label>
-      <strong>${moeda(totais.totalReceber)}</strong>
-    </div>
-  </div>
-
-  <div class="intro">
-    Este relatório consolida todos os meses salvos no Solar Gestão.
-  </div>
-
-  <h2>Detalhamento mês a mês</h2>
-
-  ${detalhesMeses}
-
-  <div class="footer">
-    Solar Gestão — Desenvolvido por Jeison Z. Gasparetto &nbsp;|&nbsp; Relatório gerado em ${dataGeracao}
-  </div>
-
-  <script>
-    window.onload = function() { window.print(); };
-  </script>
-</body>
-</html>`;
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>Relatório Solar Gestão</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#172033;background:#F4F7FA;padding:26px 30px;}.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #0D1B2A;}.header-brand h1{font-size:21px;font-weight:800;color:#0D1B2A;}.header-brand p{font-size:11px;color:#6b7280;margin-top:3px;}.header-info{text-align:right;font-size:10px;color:#6b7280;line-height:1.7;}.kpis{display:flex;gap:10px;margin-bottom:22px;}.kpi-box{flex:1;border:1px solid #D8E3EC;background:#fff;border-radius:10px;padding:12px 13px;box-shadow:0 2px 8px rgba(13,27,42,0.08);}.kpi-box.destaque{background:linear-gradient(135deg,#0D1B2A,#1B5E20);color:#fff;}.kpi-box label{display:block;font-size:8.5px;text-transform:uppercase;opacity:0.68;margin-bottom:7px;}.kpi-box strong{display:block;font-size:15px;font-weight:800;white-space:nowrap;}table{width:100%;border-collapse:collapse;}th{background:#12324A;color:#fff;font-size:8.5px;font-weight:700;text-transform:uppercase;padding:7px 8px;text-align:left;}td{padding:6px 8px;border-bottom:1px solid #eef1f4;}.num{text-align:right;white-space:nowrap;}.total-cell{font-weight:800;}.mes-bloco{margin-bottom:18px;border:1px solid #D6E4F0;border-radius:12px;overflow:hidden;page-break-inside:avoid;background:#fff;}.mes-topo{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#EAF4FF,#F2FFF6);padding:12px 14px;border-bottom:1px solid #dde4ec;}.mes-titulo{font-size:15px;color:#0D1B2A;font-weight:800;}.mes-resumo{display:grid;grid-template-columns:repeat(4,1fr);}.mes-resumo div{padding:10px 12px;border-right:1px solid #eef1f4;}.mes-resumo .receber{background:#EAF7EF;}.mes-resumo span{display:block;font-size:8px;text-transform:uppercase;color:#6b7280;margin-bottom:4px;font-weight:700;}.mes-resumo strong{font-size:12px;font-weight:800;}.mes-rodape{padding:8px 14px;background:#fbfcfd;border-top:1px solid #eef1f4;color:#6b7280;font-size:9px;text-align:right;}h4{font-size:9.5px;font-weight:800;color:#374151;text-transform:uppercase;margin:12px 14px 6px;}.footer{margin-top:26px;padding-top:10px;border-top:1px solid #dde4ec;text-align:center;font-size:9px;color:#9ca3af;}@media print{.mes-bloco{page-break-inside:avoid;}}</style></head><body><div class="header"><div class="header-brand"><h1>☀️ Solar Gestão</h1><p>Relatório profissional de produção, compensação e cobrança</p></div><div class="header-info"><div>Gerado em: ${dataGeracao}</div><div>Meses analisados: ${historico.length}</div></div></div><div class="kpis"><div class="kpi-box"><label>Produção injetada</label><strong>${formatKwh(totais.totalProducao)}</strong></div><div class="kpi-box"><label>Total faturado</label><strong>${moeda(totais.totalFaturado)}</strong></div><div class="kpi-box"><label>Desconto concedido</label><strong>${moeda(totais.totalDesconto)}</strong></div><div class="kpi-box destaque"><label>Total a receber</label><strong>${moeda(totais.totalReceber)}</strong></div></div><h2 style="font-size:13px;font-weight:800;color:#0D1B2A;margin:18px 0 10px;text-transform:uppercase;">Detalhamento mês a mês</h2>${detalhesMeses}<div class="footer">Solar Gestão — Desenvolvido por Jeison Z. Gasparetto &nbsp;|&nbsp; ${dataGeracao}</div><script>window.onload=function(){window.print();};<\/script></body></html>`;
 
   const janela = window.open("", "_blank");
-
-  if (!janela) {
-    toast("Permita pop-ups para gerar o relatório.", "warn");
-    return;
-  }
-
+  if (!janela) { toast("Permita pop-ups para gerar o relatório.", "warn"); return; }
   janela.document.write(html);
   janela.document.close();
 }
@@ -1067,6 +658,7 @@ function gerarRelatorioHistorico() {
 document.addEventListener("DOMContentLoaded", () => {
   carregarDados();
   renderHistorico();
+  carregarProducaoInjecao();
 
   document.getElementById("btnCalcular").addEventListener("click", calcular);
   document.getElementById("btnHistorico").addEventListener("click", salvarHistorico);
@@ -1081,33 +673,26 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRemoverCasa").addEventListener("click", removerCasa);
   document.getElementById("btnRelatorio").addEventListener("click", gerarRelatorioHistorico);
   document.getElementById("btnExcel").addEventListener("click", exportarExcel);
+  document.getElementById("btnLogin").addEventListener("click", loginGoogle);
   document.getElementById("btnToggleHistorico").addEventListener("click", () => {
-  const box = document.getElementById("historicoWrapper");
-  const btn = document.getElementById("btnToggleHistorico");
+    const box = document.getElementById("historicoWrapper");
+    const btn = document.getElementById("btnToggleHistorico");
+    const aberto = box.style.display !== "none";
+    box.style.display = aberto ? "none" : "block";
+    btn.textContent = aberto ? "▼" : "▲";
+  });
 
-  const aberto = box.style.display !== "none";
-
-  box.style.display = aberto ? "none" : "block";
-  btn.textContent = aberto ? "▼" : "▲";
-});
-  
   ["mes", "desconto"].forEach(id => {
     document.getElementById(id).addEventListener("input", calcular);
   });
 });
 
-
 // ===== EXPORTAR EXCEL =====
 function exportarExcel() {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
-
-  if (!historico.length) {
-    toast("Nenhum histórico salvo para exportar.", "warn");
-    return;
-  }
+  if (!historico.length) { toast("Nenhum histórico salvo para exportar.", "warn"); return; }
 
   const historicoOrdenado = [...historico].reverse();
-
   const abaResumo = [["Mês","A receber (R$)","Economia gerada (R$)","Desconto (%)","Salvo em"]];
   historicoOrdenado.forEach(item => {
     const receber = item.receberNum || 0;
@@ -1163,21 +748,20 @@ function exportarExcel() {
   XLSX.writeFile(wb,"solar_gestao_"+dataHoje+".xlsx");
   toast("📊 Excel exportado com sucesso!");
 }
-// Service Worker
+
+// ===== SERVICE WORKER =====
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
+// ===== PRODUÇÃO / INJEÇÃO =====
 const STORAGE_PRODUCAO_INJECAO = "producaoInjecaoSolar";
 
 function carregarProducaoInjecao() {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-
   const tbody = document.getElementById("tabela-producao-injecao");
   if (!tbody) return;
-
   tbody.innerHTML = "";
-
   dados.forEach((item, index) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1189,18 +773,15 @@ function carregarProducaoInjecao() {
     `;
     tbody.appendChild(tr);
   });
-
   atualizarResumoProducao();
 }
 
 function salvarProducaoInjecao(mostrarToast = true) {
   const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
   const dados = [];
-
   linhas.forEach(linha => {
     const inputs = linha.querySelectorAll("input");
     const item = { mes: "", inversor: "", potenciaKwp: 0, kwhInjetado: 0 };
-
     inputs.forEach(input => {
       const campo = input.dataset.campo;
       if (campo === "potenciaKwp" || campo === "kwhInjetado") {
@@ -1209,38 +790,23 @@ function salvarProducaoInjecao(mostrarToast = true) {
         item[campo] = input.value;
       }
     });
-
-    if (item.mes || item.inversor || item.potenciaKwp || item.kwhInjetado) {
-      dados.push(item);
-    }
+    if (item.mes || item.inversor || item.potenciaKwp || item.kwhInjetado) dados.push(item);
   });
-
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
-  if (mostrarToast) {
-  toast("✅ Produção salva com sucesso.");
-}
+  if (mostrarToast) toast("✅ Produção salva com sucesso.");
 }
 
 function adicionarLinhaProducao() {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-
-  dados.push({
-    mes: valor("mes") || "",
-    inversor: "",
-    potenciaKwp: "",
-    kwhInjetado: ""
-  });
-
+  dados.push({ mes: valor("mes") || "", inversor: "", potenciaKwp: "", kwhInjetado: "" });
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
 }
 
 function removerLinhaProducao(index) {
   const dados = JSON.parse(localStorage.getItem(STORAGE_PRODUCAO_INJECAO)) || [];
-
   dados.splice(index, 1);
-
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
   carregarProducaoInjecao();
 }
@@ -1248,16 +814,12 @@ function removerLinhaProducao(index) {
 function atualizarResumoProducao() {
   const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
   let totalKwh = 0, totalKwp = 0;
-
   linhas.forEach(linha => {
     const potenciaInput = linha.querySelector('input[data-campo="potenciaKwp"]');
     const kwhInput      = linha.querySelector('input[data-campo="kwhInjetado"]');
-    const potencia = Number((potenciaInput?.value || "0").replace(",", ".")) || 0;
-    const kwh      = Number((kwhInput?.value      || "0").replace(",", ".")) || 0;
-    totalKwp += potencia;
-    totalKwh += kwh;
+    totalKwp += Number((potenciaInput?.value || "0").replace(",", ".")) || 0;
+    totalKwh += Number((kwhInput?.value      || "0").replace(",", ".")) || 0;
   });
-
   const media = totalKwp > 0 ? totalKwh / totalKwp : 0;
   document.getElementById("total-kwh-injetado").textContent  = Math.round(totalKwh);
   document.getElementById("total-potencia-kwp").textContent  = totalKwp.toFixed(2);
@@ -1267,12 +829,7 @@ function atualizarResumoProducao() {
 document.addEventListener("input", function (event) {
   if (event.target.closest("#producao-injecao")) {
     atualizarResumoProducao();
-
     clearTimeout(window.timerSalvarProducao);
-    window.timerSalvarProducao = setTimeout(() => {
-      salvarProducaoInjecao(false);
-    }, 500);
+    window.timerSalvarProducao = setTimeout(() => salvarProducaoInjecao(false), 500);
   }
 });
-
-document.addEventListener("DOMContentLoaded", carregarProducaoInjecao);

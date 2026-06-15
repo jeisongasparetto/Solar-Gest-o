@@ -11,7 +11,6 @@
 </head>
 <body>
 
-  <!-- TOAST CONTAINER -->
   <div id="toast-container"></div>
 
   <header class="topbar">
@@ -27,16 +26,13 @@
       </div>
       <div>
         <h1>Solar Gestão</h1>
-        <p>Controle de cobrança de energia solar para imóveis/usinas </p>
+        <p>Controle de cobrança de energia solar para imóveis/usinas</p>
       </div>
     </div>
     <div class="top-actions">
-       <button id="btnRelatorio" class="btn secondary small">
-        📄 Relatório PDF
-      </button>
-      <button id="btnExcel" class="btn secondary small">
-        📊 Exportar Excel
-      </button>
+      <button id="btnRelatorio" class="btn secondary small">📄 Relatório PDF</button>
+      <button id="btnExcel" class="btn secondary small">📊 Exportar Excel</button>
+      <button id="btnLogin" class="btn secondary small">☁️ Entrar com Google</button>
     </div>
   </header>
 
@@ -48,11 +44,9 @@
         <h2>Produção / Injeção na rede</h2>
         <span>Informe quanto cada sistema injetou no mês.</span>
       </div>
-
       <div class="table-actions">
         <button class="btn secondary small" type="button" onclick="adicionarLinhaProducao()">+ Adicionar sistema</button>
       </div>
-
       <div class="table-wrap">
         <table class="solar-table">
           <thead>
@@ -67,7 +61,6 @@
           <tbody id="tabela-producao-injecao"></tbody>
         </table>
       </div>
-
       <div class="resumo-producao">
         <p><strong>Total injetado:</strong> <span id="total-kwh-injetado">0</span> kWh</p>
         <p><strong>Potência total:</strong> <span id="total-potencia-kwp">0</span> kWp</p>
@@ -81,22 +74,21 @@
         <h2>Faturamento</h2>
         <span>Digite somente os campos em branco. Os cálculos serão automáticos.</span>
       </div>
-<div class="config-grid" style="margin-bottom:16px;">
-  <label>
-    Mês de referência
-    <input id="mes" type="month" onclick="this.showPicker()" />
-  </label>
-
-  <label>
-    Desconto ao Cliente (%)
-    <input id="desconto" type="text" value="10" />
-  </label>
-</div>
+      <div class="config-grid" style="margin-bottom:16px;">
+        <label>
+          Mês de referência
+          <input id="mes" type="month" onclick="this.showPicker()" />
+        </label>
+        <label>
+          Desconto ao Cliente (%)
+          <input id="desconto" type="text" value="10" />
+        </label>
+      </div>
       <div class="table-wrap">
         <table id="tabela">
           <thead>
             <tr>
-              <th> Endereço </th>
+              <th>Endereço</th>
               <th>Unidade consumidora</th>
               <th>Cliente</th>
               <th>Consumo da fatura (R$)</th>
@@ -107,9 +99,7 @@
               <th>WhatsApp</th>
             </tr>
           </thead>
-          <tbody id="casasTbody">
-            <!-- linhas geradas por JS -->
-          </tbody>
+          <tbody id="casasTbody"></tbody>
           <tfoot>
             <tr>
               <td colspan="3">Totais</td>
@@ -123,13 +113,10 @@
           </tfoot>
         </table>
       </div>
-
-      <!-- Botões adicionar/remover casas -->
       <div class="row-controls">
         <button id="btnRemoverCasa" class="btn secondary small">− Remover casa</button>
         <button id="btnAdicionarCasa" class="btn secondary small">+ Adicionar casa</button>
       </div>
-
       <div class="actions">
         <button id="btnCalcular" class="btn secondary">Calcular agora</button>
         <button id="btnLimpar" class="btn danger">Limpar</button>
@@ -137,24 +124,18 @@
       </div>
     </section>
 
-<!-- FECHAMENTO DO MÊS -->
-<section class="panel">
-  <div class="section-title">
-    <h2>Fechamento do mês</h2>
-    <span>Confira os valores e salve o faturamento com a produção no histórico.</span>
-  </div>
+    <!-- FECHAMENTO DO MÊS -->
+    <section class="panel">
+      <div class="section-title">
+        <h2>Fechamento do mês</h2>
+        <span>Confira os valores e salve o faturamento com a produção no histórico.</span>
+      </div>
+      <div class="actions">
+        <button id="btnHistorico" class="btn">💾 Salvar mês no histórico</button>
+        <button id="btnTextoGeral" class="btn secondary">Gerar texto geral WhatsApp</button>
+      </div>
+    </section>
 
-  <div class="actions">
-    <button id="btnHistorico" class="btn">
-      💾 Salvar mês no histórico
-    </button>
-
-    <button id="btnTextoGeral" class="btn secondary">
-      Gerar texto geral WhatsApp
-    </button>
-  </div>
-</section
-    
     <!-- WHATSAPP -->
     <section class="panel">
       <div class="section-title">
@@ -188,39 +169,25 @@
       </div>
     </section>
 
-     <!-- HISTÓRICO -->
-   <section class="panel">
-  <div class="section-title historico-header">
-    <div>
-      <h2>Histórico salvo neste aparelho</h2>
-      <span>Registro simples para acompanhar os meses.</span>
-    </div>
-
-    <button id="btnToggleHistorico" class="btn secondary small" type="button">
-      ▼
-    </button>
-  </div>
-
-  <div id="historicoWrapper" style="display:none; margin-top:14px;">
-
-    <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;">
-    </div>
-    <button id="btnBackup" class="btn secondary small">
-  💾 Backup
-</button>
-<button id="btnImportar" class="btn secondary small">
-  📂 Restaurar Backup
-</button>
-    <div id="historico" class="history"></div>
-
-    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
-      <button class="btn danger small" onclick="apagarHistorico()">
-        🗑️ Apagar histórico
-      </button>
-    </div>
-
-  </div>
-</section>
+    <!-- HISTÓRICO -->
+    <section class="panel">
+      <div class="section-title historico-header">
+        <div>
+          <h2>Histórico salvo neste aparelho</h2>
+          <span>Registro simples para acompanhar os meses.</span>
+        </div>
+        <button id="btnToggleHistorico" class="btn secondary small" type="button">▼</button>
+      </div>
+      <div id="historicoWrapper" style="display:none; margin-top:14px;">
+        <div style="margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+        <button id="btnBackup" class="btn secondary small">💾 Backup</button>
+        <button id="btnImportar" class="btn secondary small">📂 Restaurar Backup</button>
+        <div id="historico" class="history"></div>
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+          <button class="btn danger small" onclick="apagarHistorico()">🗑️ Apagar histórico</button>
+        </div>
+      </div>
+    </section>
 
   </main>
 
@@ -228,6 +195,46 @@
     <span>Solar Gestão — Desenvolvido por Jeison Z. Gasparetto</span>
   </footer>
 
-  <script src="app.js?v=19"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAnalytics }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyDKmP0Jd_Cifi0TLaACgtO_ob6bDlACN9o",
+      authDomain:        "solar-gestao-516dc.firebaseapp.com",
+      projectId:         "solar-gestao-516dc",
+      storageBucket:     "solar-gestao-516dc.firebasestorage.app",
+      messagingSenderId: "935411546738",
+      appId:             "1:935411546738:web:59deaed5055bd7418da0eb",
+      measurementId:     "G-T0J2B1YFFK"
+    };
+
+    const app      = initializeApp(firebaseConfig);
+    window.db      = getFirestore(app);
+    window.auth    = getAuth(app);
+    window.provider = new GoogleAuthProvider();
+    getAnalytics(app);
+
+    onAuthStateChanged(window.auth, (user) => {
+      window.usuarioAtual = user;
+      const btn = document.getElementById("btnLogin");
+      if (btn) {
+        btn.textContent = user
+          ? `☁️ ${user.displayName.split(" ")[0]} (Sair)`
+          : "☁️ Entrar com Google";
+      }
+      if (user) {
+        carregarDadosFirebase();
+        renderHistoricoFirebase();
+        toast(`☁️ Olá, ${user.displayName.split(" ")[0]}! Dados sincronizados.`);
+      }
+    });
+  </script>
+
+  <script src="app.js?v=20"></script>
 </body>
 </html>

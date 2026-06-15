@@ -289,6 +289,9 @@ async function limparDados() {
 
   bloquearSalvarAutomatico = true;
 
+  clearTimeout(timerSalvarFirebase);
+  timerSalvarFirebase = null;
+
   if (window.usuarioAtual) {
     try {
       const { doc, deleteDoc } =
@@ -326,6 +329,8 @@ function salvarDadosFirebaseDebounce() {
   clearTimeout(timerSalvarFirebase);
 
   timerSalvarFirebase = setTimeout(() => {
+    if (bloquearSalvarAutomatico) return;
+
     if (window.usuarioAtual) {
       salvarDadosFirebase();
     }
@@ -934,7 +939,7 @@ function carregarProducaoInjecao() {
   atualizarResumoProducao();
 }
 
-function salvarProducaoInjecao(mostrarToast = true) {
+function salvarProducaoInjecao(mostrarToast = true, recarregarTabela = true) {
   const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
   const dados = [];
 
@@ -944,6 +949,7 @@ function salvarProducaoInjecao(mostrarToast = true) {
 
     inputs.forEach(input => {
       const campo = input.dataset.campo;
+
       if (campo === "potenciaKwp" || campo === "kwhInjetado") {
         item[campo] = Number(String(input.value).replace(",", ".")) || 0;
       } else {
@@ -962,7 +968,9 @@ function salvarProducaoInjecao(mostrarToast = true) {
     salvarProducaoFirebase(dados);
   }
 
-  carregarProducaoInjecao();
+  if (recarregarTabela) {
+    carregarProducaoInjecao();
+  }
 
   if (mostrarToast) toast("✅ Produção salva com sucesso.");
 }
@@ -1019,6 +1027,6 @@ document.addEventListener("input", function (event) {
   if (event.target.closest("#producao-injecao")) {
     atualizarResumoProducao();
     clearTimeout(window.timerSalvarProducao);
-    window.timerSalvarProducao = setTimeout(() => salvarProducaoInjecao(false), 500);
+    window.timerSalvarProducao = setTimeout(() => salvarProducaoInjecao(false, false), 500);
   }
 });

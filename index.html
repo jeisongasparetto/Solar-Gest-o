@@ -227,11 +227,12 @@
           ? `☁️ ${user.displayName.split(" ")[0]} (Sair)`
           : "☁️ Entrar com Google";
       }
-      if (user) {
-        carregarDadosFirebase();
-        renderHistoricoFirebase();
-        toast(`☁️ Olá, ${user.displayName.split(" ")[0]}! Dados sincronizados.`);
-      }
+     if (user) {
+  carregarDadosFirebase();
+  renderHistoricoFirebase();
+  carregarProducaoFirebase();
+  toast(`☁️ Olá, ${user.displayName.split(" ")[0]}! Dados sincronizados.`);
+}
     });
   </script>
 

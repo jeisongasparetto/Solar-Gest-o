@@ -532,29 +532,51 @@ function baixarBackup() {
   toast("⬇ Backup baixado.");
 }
 
-function importarBackup(file) {
+async function importarBackup(file) {
   if (!file) return;
+
   const reader = new FileReader();
-  reader.onload = function (e) {
+
+  reader.onload = async function (e) {
     try {
       const backup = JSON.parse(e.target.result);
+
       if (backup.dados) {
         localStorage.setItem("solarGestaoDados", JSON.stringify(backup.dados));
         aplicarDados(backup.dados);
+
+        if (window.usuarioAtual) {
+          await salvarDadosFirebase();
+        }
       }
+
       if (backup.historico) {
         localStorage.setItem("solarGestaoHistorico", JSON.stringify(backup.historico));
         renderHistorico();
+
+        if (window.usuarioAtual) {
+          for (const item of backup.historico) {
+            await salvarHistoricoFirebase(item);
+          }
+        }
       }
+
       if (backup.producao) {
         localStorage.setItem("producaoInjecaoSolar", JSON.stringify(backup.producao));
         carregarProducaoInjecao();
+
+        if (window.usuarioAtual) {
+          await salvarProducaoFirebase(backup.producao);
+        }
       }
-      toast("⬆ Backup importado com sucesso.");
+
+      toast("⬆ Backup importado e sincronizado com Firebase.");
     } catch (err) {
-      toast("Arquivo inválido.", "error");
+      console.error("Erro ao importar backup:", err);
+      toast("Arquivo inválido ou erro ao sincronizar.", "error");
     }
   };
+
   reader.readAsText(file);
 }
 
@@ -598,9 +620,13 @@ async function salvarDadosFirebase() {
 async function carregarDadosFirebase() {
   const uid = userPath();
   if (!uid) return;
+
   try {
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const { doc, getDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
     const snap = await getDoc(doc(window.db, "usuarios", uid, "app", "dados"));
+
     if (snap.exists()) {
       const dados = snap.data();
       localStorage.setItem("solarGestaoDados", JSON.stringify(dados));

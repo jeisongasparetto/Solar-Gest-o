@@ -219,7 +219,7 @@
     window.provider = new GoogleAuthProvider();
     getAnalytics(app);
 
-    onAuthStateChanged(window.auth, (user) => {
+    onAuthStateChanged(window.auth, async (user) => {
       window.usuarioAtual = user;
       const btn = document.getElementById("btnLogin");
       if (btn) {
@@ -227,15 +227,16 @@
           ? `☁️ ${user.displayName.split(" ")[0]} (Sair)`
           : "☁️ Entrar com Google";
       }
-     if (user) {
-  carregarDadosFirebase();
-  renderHistoricoFirebase();
-  carregarProducaoFirebase();
+    if (user) {
+  await carregarDadosFirebase();
+  await renderHistoricoFirebase();
+  await carregarProducaoFirebase();
+
   toast(`☁️ Olá, ${user.displayName.split(" ")[0]}! Dados sincronizados.`);
 }
     });
   </script>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>

@@ -347,6 +347,69 @@ function salvarHistorico() {
     toast("Informe o mês de referência antes de salvar.", "warn");
     return;
   }
+  
+  calcular();
+  salvarProducaoInjecao(false);
+
+  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
+  const percentual = numero("desconto") / 100;
+  let totalPagarNum = 0;
+  const casas = [];
+
+  for (let i = 1; i <= qtdCasas; i++) {
+    const d = dadosCasa(i);
+    if (d.consumo > 0 || d.injetado > 0) {
+      totalPagarNum += d.pagar;
+      casas.push({ nome: d.inquilino ? d.inquilino : d.casa, pagar: d.pagar });
+    }
+  }
+
+  const mesAtual = valor("mes");
+  const registro = {
+    id: Date.now(),
+    data: new Date().toLocaleString("pt-BR"),
+    mes: mesAtual,
+    desconto: valor("desconto") || "10",
+    receber: moeda(totalPagarNum),
+    receberNum: totalPagarNum,
+    economia: document.getElementById("kpiEconomia").textContent,
+    casas,
+    producao: filtrarProducaoDoMes(mesAtual),
+    dadosCompletos: coletarDados()
+  };
+
+  if (historicoEditandoIndex !== null && historico[historicoEditandoIndex]) {
+    const idAntigo = historico[historicoEditandoIndex].id;
+    historico[historicoEditandoIndex] = {
+      ...registro,
+      id: idAntigo,
+      data: new Date().toLocaleString("pt-BR") + " — alterado"
+    };
+    historicoEditandoIndex = null;
+    toast("✅ Histórico alterado com sucesso.");
+  } else {
+    const indexMesmoMes = historico.findIndex(item => item.mes === mesAtual);
+    if (indexMesmoMes >= 0) {
+      historico[indexMesmoMes] = {
+        ...registro,
+        id: historico[indexMesmoMes].id,
+        data: new Date().toLocaleString("pt-BR") + " — atualizado"
+      };
+      toast("🔄 Histórico do mês atualizado.");
+    } else {
+      historico.unshift(registro);
+      toast("📅 Histórico salvo.");
+    }
+  }
+
+  localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));
+
+  // Sincroniza com Firebase se logado
+  if (window.usuarioAtual) salvarHistoricoFirebase(registro);
+
+  renderHistorico();
+}
+
 function salvarProducaoNoHistorico() {
   salvarProducaoInjecao(false, false);
 
@@ -421,67 +484,6 @@ function salvarProducaoNoHistorico() {
   renderHistorico();
 
   toast("⚡ Produção salva no histórico.");
-}
-  calcular();
-  salvarProducaoInjecao(false);
-
-  const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
-  const percentual = numero("desconto") / 100;
-  let totalPagarNum = 0;
-  const casas = [];
-
-  for (let i = 1; i <= qtdCasas; i++) {
-    const d = dadosCasa(i);
-    if (d.consumo > 0 || d.injetado > 0) {
-      totalPagarNum += d.pagar;
-      casas.push({ nome: d.inquilino ? d.inquilino : d.casa, pagar: d.pagar });
-    }
-  }
-
-  const mesAtual = valor("mes");
-  const registro = {
-    id: Date.now(),
-    data: new Date().toLocaleString("pt-BR"),
-    mes: mesAtual,
-    desconto: valor("desconto") || "10",
-    receber: moeda(totalPagarNum),
-    receberNum: totalPagarNum,
-    economia: document.getElementById("kpiEconomia").textContent,
-    casas,
-    producao: filtrarProducaoDoMes(mesAtual),
-    dadosCompletos: coletarDados()
-  };
-
-  if (historicoEditandoIndex !== null && historico[historicoEditandoIndex]) {
-    const idAntigo = historico[historicoEditandoIndex].id;
-    historico[historicoEditandoIndex] = {
-      ...registro,
-      id: idAntigo,
-      data: new Date().toLocaleString("pt-BR") + " — alterado"
-    };
-    historicoEditandoIndex = null;
-    toast("✅ Histórico alterado com sucesso.");
-  } else {
-    const indexMesmoMes = historico.findIndex(item => item.mes === mesAtual);
-    if (indexMesmoMes >= 0) {
-      historico[indexMesmoMes] = {
-        ...registro,
-        id: historico[indexMesmoMes].id,
-        data: new Date().toLocaleString("pt-BR") + " — atualizado"
-      };
-      toast("🔄 Histórico do mês atualizado.");
-    } else {
-      historico.unshift(registro);
-      toast("📅 Histórico salvo.");
-    }
-  }
-
-  localStorage.setItem("solarGestaoHistorico", JSON.stringify(historico.slice(0, 36)));
-
-  // Sincroniza com Firebase se logado
-  if (window.usuarioAtual) salvarHistoricoFirebase(registro);
-
-  renderHistorico();
 }
 
 function renderHistorico() {

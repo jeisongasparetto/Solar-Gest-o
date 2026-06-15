@@ -639,7 +639,56 @@ async function renderHistoricoFirebase() {
     console.error("Erro ao carregar histórico do Firebase:", e);
   }
 }
+async function salvarProducaoFirebase(dados) {
+  const uid = userPath();
+  if (!uid) return;
 
+  try {
+    const { doc, setDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+    await setDoc(doc(window.db, "usuarios", uid, "app", "producao"), {
+      itens: dados || [],
+      atualizadoEm: new Date().toISOString()
+    });
+  } catch (e) {
+    console.error("Erro ao salvar produção no Firebase:", e);
+  }
+}
+
+async function carregarProducaoFirebase() {
+  const uid = userPath();
+  if (!uid) return;
+
+  try {
+    const { doc, getDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+    const snap = await getDoc(doc(window.db, "usuarios", uid, "app", "producao"));
+
+    if (snap.exists()) {
+      const dados = snap.data();
+      localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados.itens || []));
+      carregarProducaoInjecao();
+    }
+  } catch (e) {
+    console.error("Erro ao carregar produção do Firebase:", e);
+  }
+}
+
+async function apagarProducaoFirebase() {
+  const uid = userPath();
+  if (!uid) return;
+
+  try {
+    const { doc, deleteDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+    await deleteDoc(doc(window.db, "usuarios", uid, "app", "producao"));
+  } catch (e) {
+    console.error("Erro ao apagar produção no Firebase:", e);
+  }
+}
 // ===== RELATÓRIO PDF =====
 function gerarRelatorioHistorico() {
   const historico = JSON.parse(localStorage.getItem("solarGestaoHistorico") || "[]");
@@ -843,9 +892,11 @@ function carregarProducaoInjecao() {
 function salvarProducaoInjecao(mostrarToast = true) {
   const linhas = document.querySelectorAll("#tabela-producao-injecao tr");
   const dados = [];
+
   linhas.forEach(linha => {
     const inputs = linha.querySelectorAll("input");
     const item = { mes: "", inversor: "", potenciaKwp: 0, kwhInjetado: 0 };
+
     inputs.forEach(input => {
       const campo = input.dataset.campo;
       if (campo === "potenciaKwp" || campo === "kwhInjetado") {
@@ -854,10 +905,20 @@ function salvarProducaoInjecao(mostrarToast = true) {
         item[campo] = input.value;
       }
     });
-    if (item.mes || item.inversor || item.potenciaKwp || item.kwhInjetado) dados.push(item);
+
+    if (item.mes || item.inversor || item.potenciaKwp || item.kwhInjetado) {
+      dados.push(item);
+    }
   });
+
   localStorage.setItem(STORAGE_PRODUCAO_INJECAO, JSON.stringify(dados));
+
+  if (window.usuarioAtual) {
+    salvarProducaoFirebase(dados);
+  }
+
   carregarProducaoInjecao();
+
   if (mostrarToast) toast("✅ Produção salva com sucesso.");
 }
 
